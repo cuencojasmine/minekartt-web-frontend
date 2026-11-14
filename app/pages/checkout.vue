@@ -61,7 +61,7 @@
         </v-alert>
 
         <div class="d-flex flex-wrap justify-center ga-3 mt-6">
-          <v-btn color="primary" size="large" to="/" prepend-icon="shopping-bag">Continue Shopping</v-btn>
+          <v-btn color="primary" size="large" to="/" prepend-icon="shopping-cart">Continue Shopping</v-btn>
           <v-btn variant="tonal" size="large" to="/products" prepend-icon="package-open">View Stock</v-btn>
         </div>
       </v-card-text>
@@ -75,7 +75,7 @@
         <v-icon icon="shopping-cart" size="72" color="grey" />
         <h1 class="text-h5 font-weight-bold mt-4">Your cart is empty</h1>
         <p class="text-medium-emphasis mt-2">Add some products before checking out.</p>
-        <v-btn color="primary" to="/" class="mt-6" prepend-icon="shopping-bag">Go Shopping</v-btn>
+        <v-btn color="primary" to="/" class="mt-6" prepend-icon="shopping-cart">Go Shopping</v-btn>
       </v-card-text>
     </v-card>
 

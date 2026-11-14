@@ -94,7 +94,7 @@
               </template>
               <template v-else>
                 <div v-for="n in 3" :key="n" class="hero-tile sk-glass d-flex align-center justify-center" :class="n === 1 ? 'hero-tile-main' : 'hero-tile-side'">
-                  <v-icon icon="shopping-bag" size="56" color="primary" class="opacity-40" />
+                  <v-icon icon="shopping-cart" size="56" color="primary" class="opacity-40" />
                 </div>
               </template>
             </div>
@@ -102,26 +102,6 @@
         </v-row>
       </v-container>
     </section>
-
-    <!-- ========================================
-         FLOATING SEARCH (filters the product grid below)
-    ========================================= -->
-    <v-container class="search-wrap">
-      <form class="search-pill" role="search" @submit.prevent="scrollToProducts">
-        <v-icon icon="search" class="search-icon ml-2" />
-        <input
-          v-model="search"
-          type="search"
-          class="search-input"
-          placeholder="Search by name, description, or category"
-          aria-label="Search products"
-        >
-        <v-btn type="submit" color="primary" rounded="pill" :icon="xs" class="flex-shrink-0" aria-label="Search">
-          <v-icon v-if="xs" icon="arrow-right" />
-          <span v-else>Search</span>
-        </v-btn>
-      </form>
-    </v-container>
 
     <!-- ========================================
          PROMO / FEATURE STRIP
@@ -199,7 +179,7 @@
     </section>
 
     <!-- ========================================
-         PRODUCTS (category filter + sort; search comes from the floating search bar)
+         PRODUCTS (search, category filter + sort)
     ========================================= -->
     <v-container id="products" class="pb-12">
       <div class="section-head">
@@ -213,7 +193,21 @@
         </span>
       </div>
 
-      <!-- Search lives in the floating search bar under the hero; this toolbar only filters and sorts -->
+      <form class="search-pill catalog-search" role="search" @submit.prevent="scrollToProducts">
+        <v-icon icon="search" class="search-icon ml-2" />
+        <input
+          v-model="search"
+          type="search"
+          class="search-input"
+          placeholder="Search by name, description, or category"
+          aria-label="Search products"
+        >
+        <v-btn type="submit" color="primary" rounded="pill" :icon="xs" class="flex-shrink-0" aria-label="Search">
+          <v-icon v-if="xs" icon="arrow-right" />
+          <span v-else>Search</span>
+        </v-btn>
+      </form>
+
       <div class="toolbar sk-surface mb-4">
         <v-row dense>
           <v-col cols="6">
@@ -797,13 +791,7 @@ onMounted(() => {
   border-radius: 16px;
 }
 
-/* ---------- Floating search ---------- */
-.search-wrap {
-  position: relative;
-  z-index: 2;
-  margin-top: -36px;
-}
-
+/* ---------- Search ---------- */
 .search-pill {
   display: flex;
   align-items: center;
@@ -815,6 +803,12 @@ onMounted(() => {
   border: 1px solid var(--sk-border);
   border-radius: 999px;
   box-shadow: 0 18px 40px -18px var(--sk-shadow-soft);
+}
+
+/* Products search: centered under the section head, with room before the filters */
+.catalog-search {
+  margin-top: 8px;
+  margin-bottom: 28px;
 }
 
 .search-input {

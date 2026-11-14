@@ -20,7 +20,7 @@
 
       <v-btn
         icon="heart"
-        :color="inWishlist ? 'pink' : 'grey-darken-2'"
+        :color="inWishlist ? 'pink' : undefined"
         :aria-label="inWishlist ? 'Remove from wishlist' : 'Add to wishlist'"
         :aria-pressed="inWishlist"
         variant="text"
@@ -157,6 +157,11 @@ const buttonIcon = computed(() => {
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+/* Un-wishlisted heart: theme-aware so it stays visible in dark mode */
+.wishlist-btn:not(.sk-icon-fill) {
+  color: var(--sk-ink-soft);
 }
 
 .stock-badge {

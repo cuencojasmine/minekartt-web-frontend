@@ -30,7 +30,7 @@
 
           <v-btn icon variant="text" size="small" class="nav-icon" aria-label="Open cart" @click="cart.drawerOpen.value = true">
             <v-badge :content="cart.totalItems.value" :model-value="cart.totalItems.value > 0" color="primary" offset-x="-2" offset-y="-2">
-              <v-icon icon="shopping-bag" size="22" />
+              <v-icon icon="shopping-cart" size="22" />
             </v-badge>
           </v-btn>
 

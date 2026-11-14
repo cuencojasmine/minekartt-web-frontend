@@ -10,7 +10,7 @@
     <div class="d-flex flex-column fill-height">
       <div class="d-flex align-center pa-4">
         <v-avatar color="primary" variant="tonal" rounded="lg" size="38" class="mr-3">
-          <v-icon icon="shopping-bag" />
+          <v-icon icon="shopping-cart" />
         </v-avatar>
         <span class="text-h6 font-weight-bold">My Cart</span>
         <v-chip size="small" color="primary" variant="tonal" class="ml-2">
