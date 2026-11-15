@@ -41,6 +41,14 @@
   --sk-selected: var(--sk-brand-200); /* active chip / tile fill */
   --sk-accent-ink: var(--sk-brand-900); /* text on --sk-tile and --sk-selected */
   --sk-img-tile: var(--sk-tile); /* product photo stage (stays light in dark mode) */
+  /* Admin controls (Manage Products): an outlined button on a solid surface, so it steps
+     back from the filled primary used by shopper CTAs (Shop Now, Add to Cart, Search). */
+  --sk-admin-ink: var(--sk-brand-700); /* 4.6:1 on the white fill */
+  --sk-admin-bg: var(--sk-surface);
+  --sk-admin-border: var(--sk-brand-200);
+  --sk-admin-ink-hover: var(--sk-brand-800); /* 6.8:1 on the brand-50 hover fill */
+  --sk-admin-bg-hover: var(--sk-brand-50);
+  --sk-admin-border-hover: var(--sk-brand-300);
   /* Light glass: a white sheen fading to clear, so the color behind shows through.
      A white border alone vanishes on light pages, so the edge also gets a faint navy
      hairline (--sk-glass-edge) and a bright inner top highlight (--sk-glass-sheen). */
@@ -110,7 +118,14 @@ html[data-theme='dark'] {
   --sk-hover: rgba(255, 255, 255, 0.08);
   --sk-selected: rgba(var(--sk-brand-500-rgb), 0.24);
   --sk-accent-ink: var(--sk-brand-200);
-  --sk-img-tile: #dbe5f0;
+  /* Dimmed Holst blue-gray: less glare on navy, still light enough for dark product silhouettes */
+  --sk-img-tile: #c4d6ea;
+  --sk-admin-ink: #7faedd; /* 6.4:1 on #1a2840 */
+  --sk-admin-bg: #1a2840; /* raised surface (surface-bright) */
+  --sk-admin-border: #22324a;
+  --sk-admin-ink-hover: var(--sk-brand-200);
+  --sk-admin-bg-hover: #22324a;
+  --sk-admin-border-hover: var(--sk-brand-700);
   --sk-glass-bg: rgba(18, 29, 46, 0.72);
   --sk-glass-strong: rgba(18, 29, 46, 0.92);
   --sk-glass-border: rgba(255, 255, 255, 0.08);
@@ -216,6 +231,27 @@ section[id],
     0 14px 28px -14px var(--sk-shadow-soft),
     inset 0 -6px 12px var(--sk-clay-inset),
     inset 0 4px 8px var(--sk-clay-highlight);
+}
+
+/* ---------- Admin button (use with variant="outlined", no color) ---------- */
+.v-btn.sk-admin-btn {
+  color: var(--sk-admin-ink);
+  background: var(--sk-admin-bg);
+  border-color: var(--sk-admin-border);
+  box-shadow: none;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.v-btn.sk-admin-btn:hover,
+.v-btn.sk-admin-btn:focus-visible {
+  color: var(--sk-admin-ink-hover);
+  background: var(--sk-admin-bg-hover);
+  border-color: var(--sk-admin-border-hover);
+}
+
+/* The hover fill above replaces Vuetify's currentColor overlay */
+.v-btn.sk-admin-btn > .v-btn__overlay {
+  display: none;
 }
 
 /* ---------- Minimal surfaces ---------- */

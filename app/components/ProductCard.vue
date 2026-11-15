@@ -30,8 +30,9 @@
         @click="wishlist.toggleWishlist(product)"
       />
 
+      <!-- Each stock state shows once: out of stock as this photo badge, everything else in the
+           stock line under the price (green dot = in stock, amber = 10 or fewer left). -->
       <span v-if="isOutOfStock" class="stock-badge badge-out">Out of stock</span>
-      <span v-else-if="stock <= 5" class="stock-badge badge-low">Only {{ stock }} left</span>
     </div>
 
     <div class="card-body d-flex flex-column flex-grow-1">
@@ -43,7 +44,10 @@
 
       <div class="d-flex flex-wrap align-end justify-space-between ga-1 mt-auto pt-3">
         <span class="product-price">{{ formatCurrency(product.price) }}</span>
-        <span class="stock-text" :class="stockClass">{{ stockLabel }}</span>
+        <!-- Out of stock: the photo badge and the disabled button already say so -->
+        <span v-if="!isOutOfStock" class="stock-text" :class="`stock-${stockLevel}`">
+          <span class="stock-dot" aria-hidden="true" />{{ stockLabel }}
+        </span>
       </div>
 
       <BitsClickSpark class="mt-3" :disabled="isOutOfStock || isMaxedOut">
@@ -80,17 +84,13 @@ const inCart = computed(() => cart.findItem(props.product.documentId)?.quantity 
 const isMaxedOut = computed(() => !isOutOfStock.value && inCart.value >= stock.value)
 const inWishlist = computed(() => wishlist.isInWishlist(props.product.documentId))
 
-const stockLabel = computed(() => {
-  if (isOutOfStock.value) return 'No stock'
-  if (stock.value <= 5) return `Only ${stock.value} left`
-  return `${stock.value} in stock`
-})
+// Stock status for the dot color: success (> 10), warning (1–10). Out of stock shows no line.
+const LOW_STOCK = 10
+const stockLevel = computed(() => (stock.value <= LOW_STOCK ? 'low' : 'ok'))
 
-const stockClass = computed(() => {
-  if (isOutOfStock.value) return 'text-error'
-  if (stock.value <= 5) return 'text-warning font-weight-bold'
-  return 'text-medium-emphasis'
-})
+const stockLabel = computed(() =>
+  stockLevel.value === 'low' ? `Only ${stock.value} left` : `${stock.value} in stock`,
+)
 
 // Shorter labels on phones, where cards are two per row.
 const buttonLabel = computed(() => {
@@ -174,14 +174,10 @@ const buttonIcon = computed(() => {
   border-radius: 999px;
 }
 
+/* on-error: white on the light theme's red, dark ink on the dark theme's lighter red */
 .badge-out {
-  color: #ffffff;
+  color: rgb(var(--v-theme-on-error));
   background: rgb(var(--v-theme-error));
-}
-
-.badge-low {
-  color: #92400e;
-  background: #fef3c7;
 }
 
 .card-body {
@@ -228,8 +224,30 @@ const buttonIcon = computed(() => {
   color: var(--sk-ink);
 }
 
+/* Healthy stock keeps muted text and lets the green dot speak; low stock colors the text too */
 .stock-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
+  color: var(--sk-muted);
+}
+
+.stock-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.stock-ok .stock-dot {
+  background: rgb(var(--v-theme-success));
+}
+
+.stock-low {
+  font-weight: 700;
+  color: rgb(var(--v-theme-warning));
 }
 
 .cart-btn :deep(.v-btn__content) {

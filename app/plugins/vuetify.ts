@@ -86,9 +86,13 @@ export default defineNuxtPlugin((app) => {
             'surface-variant': holst[200], // tooltips, snackbars
             'on-surface-variant': '#0B1422',
             ...brandColors,
+            // Status colors are light here, so text on them (badges, flat buttons) is navy, not white.
             success: '#22C55E',
+            'on-success': '#0B1422',
             warning: '#F59E0B',
+            'on-warning': '#0B1422',
             error: '#F87171',
+            'on-error': '#0B1422',
             info: '#7FAEDD',
           },
         },

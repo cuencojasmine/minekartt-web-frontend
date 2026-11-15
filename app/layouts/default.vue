@@ -34,12 +34,12 @@
             </v-badge>
           </v-btn>
 
+          <!-- Admin control: outlined (sk-admin-btn) so filled primary stays for shopper CTAs -->
           <v-btn
             to="/products"
-            color="primary"
-            variant="flat"
+            variant="outlined"
             prepend-icon="package"
-            class="d-none d-sm-flex ml-2"
+            class="sk-admin-btn d-none d-sm-flex ml-2"
             rounded="pill"
           >
             Manage Products
@@ -53,7 +53,7 @@
             <v-list rounded="xl" min-width="220" class="py-2" elevation="8">
               <v-list-item v-for="link in navLinks" :key="link.title" :to="link.to" :prepend-icon="link.icon" :title="link.title" />
               <v-divider class="my-2" />
-              <v-list-item to="/products" prepend-icon="package" title="Manage Products" base-color="primary" />
+              <v-list-item to="/products" prepend-icon="package" title="Manage Products" base-color="accent" />
             </v-list>
           </v-menu>
         </nav>

@@ -26,7 +26,7 @@
               <v-btn size="x-large" color="primary" rounded="pill" append-icon="arrow-right" class="hero-cta" @click="scrollToProducts">
                 Shop Now
               </v-btn>
-              <v-btn size="x-large" variant="text" rounded="pill" prepend-icon="package" to="/products">
+              <v-btn size="x-large" variant="outlined" rounded="pill" prepend-icon="package" class="sk-admin-btn" to="/products">
                 Manage Products
               </v-btn>
             </div>
