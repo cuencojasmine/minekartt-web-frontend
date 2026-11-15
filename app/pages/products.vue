@@ -137,7 +137,20 @@
 
         <!-- LOADING STATE: skeleton rows shaped like the table (first load only;
              later reloads after a save keep the table on screen) -->
-        <v-card v-if="loading && !products.length" rounded="lg" elevation="1" class="product-table-card" aria-busy="true" aria-label="Loading products">
+        <ul v-if="loading && !products.length && isPhone" class="pm-list" aria-busy="true" aria-label="Loading products">
+          <li v-for="n in 4" :key="n" class="pm-item" aria-hidden="true">
+            <div class="pm-item-main">
+              <span class="sk-skel" style="width: 64px; height: 64px; border-radius: 12px; flex: none" />
+              <div class="pm-info">
+                <span class="sk-skel" style="width: 60%; height: 14px" />
+                <span class="sk-skel mt-2" style="width: 85%; height: 10px" />
+                <span class="sk-skel mt-2" style="width: 30%; height: 14px" />
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <v-card v-else-if="loading && !products.length" rounded="lg" elevation="1" class="product-table-card" aria-busy="true" aria-label="Loading products">
           <v-table>
             <thead>
               <tr>
@@ -185,6 +198,44 @@
             </p>
           </v-card-text>
         </v-card>
+
+        <!-- PRODUCT LIST (phones): one card per product instead of a wide table -->
+        <ul v-else-if="isPhone" class="pm-list" aria-label="Products">
+          <li v-for="product in filteredProducts" :key="product.documentId" class="pm-item">
+            <div class="pm-item-main">
+              <div class="pm-thumb">
+                <img v-if="product.image" :src="getImageUrl(product.image)" :alt="product.name" />
+                <v-icon v-else icon="image-off" size="22" color="grey" />
+              </div>
+
+              <div class="pm-info">
+                <div class="pm-name">{{ product.name }}</div>
+                <div class="pm-desc">{{ product.description || 'No description' }}</div>
+                <div class="pm-price">{{ formatPrice(product.price) }}</div>
+              </div>
+            </div>
+
+            <div class="pm-item-foot">
+              <div class="pm-chips">
+                <v-chip color="primary" variant="tonal" size="x-small">
+                  {{ product.category || 'Uncategorized' }}
+                </v-chip>
+                <v-chip :color="getStockColor(product.stock)" variant="tonal" size="x-small">
+                  {{ product.stock }} in stock
+                </v-chip>
+                <v-chip :color="product.is_active ? 'success' : 'error'" variant="tonal" size="x-small">
+                  {{ product.is_active ? 'Active' : 'Inactive' }}
+                </v-chip>
+              </div>
+
+              <div class="pm-actions">
+                <v-btn icon="eye" variant="text" color="info" size="small" :aria-label="`View ${product.name}`" @click="viewProduct(product)" />
+                <v-btn icon="pencil" variant="text" color="primary" size="small" :aria-label="`Edit ${product.name}`" @click="openEditDialog(product)" />
+                <v-btn icon="trash" variant="text" color="error" size="small" :aria-label="`Delete ${product.name}`" @click="openDeleteDialog(product)" />
+              </div>
+            </div>
+          </li>
+        </ul>
 
         <!-- PRODUCT TABLE -->
         <v-card v-else rounded="lg" elevation="1" class="product-table-card">
@@ -257,75 +308,171 @@
         <!-- ========================================
              CREATE / EDIT PRODUCT DIALOG
         ========================================= -->
-        <v-dialog v-model="productDialog" max-width="700" persistent>
-          <v-card rounded="xl">
-            <v-card-title class="d-flex align-center justify-space-between pa-5">
-              <span class="text-h5 font-weight-bold">
-                {{ isEditing ? 'Edit Product' : 'Add Product' }}
-              </span>
-              <v-btn icon="x" variant="text" @click="closeProductDialog" />
-            </v-card-title>
+        <v-dialog v-model="productDialog" max-width="880" persistent scrollable>
+          <v-card class="pd-card" rounded="xl">
+            <!-- HEADER -->
+            <header class="pd-header">
+              <div class="pd-header-icon">
+                <v-icon :icon="isEditing ? 'pencil' : 'package'" size="18" />
+              </div>
+              <div class="pd-header-text">
+                <h2 class="pd-title">{{ isEditing ? 'Edit product' : 'Add product' }}</h2>
+                <p class="pd-subtitle">
+                  {{ isEditing ? 'Update the details shoppers see in the store.' : 'Fill in the details to list a new product.' }}
+                </p>
+              </div>
+              <v-btn
+                icon="x"
+                variant="text"
+                size="small"
+                class="pd-close"
+                aria-label="Close"
+                @click="closeProductDialog"
+              />
+            </header>
 
-            <v-divider />
+            <v-card-text class="pd-body">
+              <v-form ref="productForm" class="pd-grid" @submit.prevent="saveProduct">
+                <!-- IMAGE -->
+                <section class="pd-media" aria-label="Product image">
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/*"
+                    class="d-none"
+                    @change="onFilePicked"
+                  />
 
-            <v-card-text class="pa-6">
-              <v-form ref="productForm" @submit.prevent="saveProduct">
-                <div v-if="imagePreview || currentImage" class="image-preview mb-4">
-                  <v-img :src="imagePreview || getImageUrl(currentImage)" height="220" contain />
-                </div>
+                  <button
+                    type="button"
+                    class="pd-dropzone"
+                    :class="{ 'pd-dropzone--over': dragOver, 'pd-dropzone--filled': previewSrc }"
+                    @click="fileInput?.click()"
+                    @dragover.prevent="dragOver = true"
+                    @dragleave.prevent="dragOver = false"
+                    @drop.prevent="onFileDropped"
+                  >
+                    <img v-if="previewSrc" :src="previewSrc" alt="" class="pd-dropzone-img" />
 
-                <v-file-input
-                  v-model="selectedFile"
-                  label="Select Product Image"
-                  variant="outlined"
-                  accept="image/*"
-                  @update:model-value="handleImageChange"
-                />
+                    <span v-if="!previewSrc" class="pd-dropzone-empty">
+                      <span class="pd-dropzone-icon"><v-icon icon="cloud-upload" size="22" /></span>
+                      <span class="pd-dropzone-title">Upload an image</span>
+                      <span class="pd-dropzone-hint">Click or drag a file here<br />Any image except SVG · max 5 MB</span>
+                    </span>
 
-                <v-text-field
-                  v-model="form.name"
-                  label="Product Name"
-                  variant="outlined"
-                  :rules="[(value) => !!value || 'Product name is required']"
-                />
+                    <span v-else class="pd-dropzone-overlay">
+                      <v-icon icon="cloud-upload" size="16" />
+                      Replace image
+                    </span>
+                  </button>
 
-                <v-textarea v-model="form.description" label="Description" variant="outlined" rows="3" />
+                  <div v-if="selectedFileName" class="pd-file">
+                    <v-icon icon="paperclip" size="14" class="pd-file-icon" />
+                    <span class="pd-file-name">{{ selectedFileName }}</span>
+                    <button type="button" class="pd-file-clear" aria-label="Remove selected image" @click="clearSelectedFile">
+                      <v-icon icon="x" size="14" />
+                    </button>
+                  </div>
+                  <p v-else class="pd-media-note">
+                    {{ previewSrc ? 'Current image' : 'No image yet' }}
+                  </p>
+                </section>
 
-                <v-row>
-                  <v-col cols="12" md="6">
+                <!-- FIELDS -->
+                <section class="pd-fields">
+                  <div class="pd-field">
+                    <label for="pd-name" class="pd-label">Product name</label>
                     <v-text-field
-                      v-model.number="form.price"
-                      label="Price"
-                      type="number"
+                      id="pd-name"
+                      v-model="form.name"
+                      placeholder="e.g. Wooden toy set"
                       variant="outlined"
-                      :rules="priceRules"
+                      density="compact"
+                      hide-details="auto"
+                      :rules="[(value) => !!value || 'Product name is required']"
                     />
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model.number="form.stock"
-                      label="Stock"
-                      type="number"
-                      variant="outlined"
-                      :rules="stockRules"
-                    />
-                  </v-col>
-                </v-row>
+                  </div>
 
-                <v-select v-model="form.category" :items="categories" label="Category" variant="outlined" />
-                <v-switch v-model="form.is_active" label="Active Product" color="success" inset />
+                  <div class="pd-field">
+                    <label for="pd-description" class="pd-label">Description</label>
+                    <v-textarea
+                      id="pd-description"
+                      v-model="form.description"
+                      placeholder="A short description shoppers will see"
+                      variant="outlined"
+                      density="compact"
+                      rows="3"
+                      no-resize
+                      hide-details
+                    />
+                  </div>
+
+                  <div class="pd-row">
+                    <div class="pd-field">
+                      <label for="pd-price" class="pd-label">Price</label>
+                      <v-text-field
+                        id="pd-price"
+                        v-model.number="form.price"
+                        type="number"
+                        min="0"
+                        prefix="₱"
+                        variant="outlined"
+                        density="compact"
+                        hide-details="auto"
+                        :rules="priceRules"
+                      />
+                    </div>
+                    <div class="pd-field">
+                      <label for="pd-stock" class="pd-label">Stock</label>
+                      <v-text-field
+                        id="pd-stock"
+                        v-model.number="form.stock"
+                        type="number"
+                        min="0"
+                        suffix="units"
+                        variant="outlined"
+                        density="compact"
+                        hide-details="auto"
+                        :rules="stockRules"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="pd-field">
+                    <label for="pd-category" class="pd-label">Category</label>
+                    <v-select
+                      id="pd-category"
+                      v-model="form.category"
+                      :items="categories"
+                      placeholder="Choose a category"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                    />
+                  </div>
+
+                  <div class="pd-status">
+                    <div class="pd-status-title">Active Product</div>
+                    <v-switch
+                      v-model="form.is_active"
+                      color="success"
+                      inset
+                      density="compact"
+                      hide-details
+                      aria-label="Active Product"
+                    />
+                  </div>
+                </section>
               </v-form>
             </v-card-text>
 
-            <v-divider />
-
-            <v-card-actions class="pa-5">
-              <v-spacer />
-              <v-btn variant="text" @click="closeProductDialog">Cancel</v-btn>
-              <v-btn color="primary" :loading="saving" @click="saveProduct">
-                {{ isEditing ? 'Update Product' : 'Save Product' }}
+            <!-- FOOTER -->
+            <footer class="pd-footer">
+              <v-btn variant="text" class="pd-btn" @click="closeProductDialog">Cancel</v-btn>
+              <v-btn color="primary" variant="flat" class="pd-btn" :loading="saving" @click="saveProduct">
+                {{ isEditing ? 'Save changes' : 'Add product' }}
               </v-btn>
-            </v-card-actions>
+            </footer>
           </v-card>
         </v-dialog>
 
@@ -444,6 +591,7 @@
 
 <script setup lang="ts">
 // @ts-nocheck
+import { useDisplay } from 'vuetify'
 
 // ===== 6. Page settings and Strapi URL =====
 definePageMeta({
@@ -527,6 +675,53 @@ const selectedFile = ref(null)
 const imagePreview = ref(null)
 const currentImage = ref(null)
 
+// Image picker in the product dialog (hidden <input type="file"> + drop zone)
+const fileInput = ref(null)
+const dragOver = ref(false)
+const previewSrc = computed(() => imagePreview.value || getImageUrl(currentImage.value))
+const selectedFileName = computed(() => getSelectedFile()?.name || '')
+
+// Same rules as the Strapi upload plugin (shopkart-server/config/plugins.ts):
+// any image type except SVG, at most 5 MB.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+function pickFile(file) {
+  if (!file) return
+
+  if (!file.type?.startsWith('image/')) {
+    showSnackbar('Please choose an image file.', 'warning')
+    return
+  }
+
+  if (file.type === 'image/svg+xml') {
+    showSnackbar('SVG images are not allowed. Use PNG, JPG, WEBP or GIF.', 'warning')
+    return
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
+    const sizeMb = (file.size / 1024 / 1024).toFixed(1)
+    showSnackbar(`This image is ${sizeMb} MB. The limit is 5 MB.`, 'warning')
+    return
+  }
+  selectedFile.value = file
+  handleImageChange(file)
+}
+
+function onFilePicked(event) {
+  pickFile(event.target.files?.[0])
+  event.target.value = '' // allow picking the same file again
+}
+
+function onFileDropped(event) {
+  dragOver.value = false
+  pickFile(event.dataTransfer?.files?.[0])
+}
+
+function clearSelectedFile() {
+  selectedFile.value = null
+  handleImageChange(null)
+}
+
 // ===== 10. Categories, validation, and snackbar state =====
 const categories = [
   'Electronics',
@@ -547,6 +742,10 @@ const stockRules = [
 ]
 
 const notify = useNotify()
+
+// Below 760px the table no longer fits, so products show as stacked cards.
+const { width: viewportWidth } = useDisplay()
+const isPhone = computed(() => viewportWidth.value < 760)
 
 // ===== 12. Search filter =====
 const filteredProducts = computed(() => {
@@ -769,6 +968,7 @@ function handleImageChange(value) {
   const file = getFileFromValue(value)
 
   if (!file) {
+    if (imagePreview.value) URL.revokeObjectURL(imagePreview.value)
     imagePreview.value = null
     return
   }
@@ -1053,6 +1253,106 @@ onMounted(() => {
   overflow-x: auto;
 }
 
+/* ===== Product list on phones ===== */
+.pm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pm-item {
+  padding: 12px;
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
+  border-radius: 14px;
+  box-shadow: var(--sk-shadow-sm);
+}
+
+.pm-item-main {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pm-thumb {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  background: var(--sk-img-tile);
+  border-radius: 12px;
+}
+
+.pm-thumb img {
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  object-fit: contain;
+}
+
+.pm-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pm-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--sk-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-desc {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--sk-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-price {
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sk-ink);
+}
+
+.pm-item-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sk-border);
+}
+
+.pm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pm-actions {
+  display: flex;
+  flex: none;
+  margin-right: -6px;
+}
+
 .description-text {
   max-width: 320px;
   overflow: hidden;
@@ -1061,11 +1361,344 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.image-preview {
-  overflow: hidden;
+/* ===== Create / edit product dialog ===== */
+.pd-card {
+  background: var(--sk-surface) !important;
   border: 1px solid var(--sk-border);
-  border-radius: 12px;
+  box-shadow: var(--sk-shadow-lg) !important;
+}
+
+.pd-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 20px 16px 24px;
+  border-bottom: 1px solid var(--sk-border);
+}
+
+.pd-header-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  color: var(--sk-accent-ink);
+  background: var(--sk-tile);
+  border: 1px solid var(--sk-border);
+}
+
+.pd-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--sk-ink);
+}
+
+.pd-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--sk-muted);
+}
+
+.pd-close {
+  align-self: flex-start;
+  color: var(--sk-muted) !important;
+}
+
+.pd-body {
+  padding: 24px !important;
+}
+
+.pd-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 28px;
+}
+
+/* Image column */
+.pd-media {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
   background: var(--sk-img-tile);
+  border: 1.5px dashed var(--sk-brand-300);
+  border-radius: 16px;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pd-dropzone--filled {
+  border-style: solid;
+  border-color: var(--sk-border);
+}
+
+.pd-dropzone:hover,
+.pd-dropzone--over {
+  border-color: var(--sk-brand-500);
+}
+
+.pd-dropzone--over {
+  box-shadow: 0 0 0 4px rgba(var(--sk-brand-500-rgb), 0.18);
+}
+
+.pd-dropzone:focus-visible {
+  outline: none;
+  border-color: var(--sk-brand-700);
+  box-shadow: 0 0 0 3px rgba(var(--sk-brand-500-rgb), 0.35);
+}
+
+.pd-dropzone-img {
+  width: 100%;
+  height: 100%;
+  padding: 18px;
+  object-fit: contain;
+}
+
+.pd-dropzone-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+}
+
+.pd-dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 4px;
+  color: var(--sk-brand-700);
+  background: var(--sk-surface);
+  border-radius: 50%;
+  box-shadow: var(--sk-shadow-sm);
+}
+
+.pd-dropzone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sk-accent-ink);
+}
+
+.pd-dropzone-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sk-muted);
+}
+
+.pd-dropzone-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(var(--sk-brand-900-rgb), 0.82);
+  border-radius: 999px;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.pd-dropzone:hover .pd-dropzone-overlay,
+.pd-dropzone:focus-visible .pd-dropzone-overlay {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.pd-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 12px;
+  font-size: 13px;
+  color: var(--sk-ink-soft);
+  background: var(--sk-tile);
+  border-radius: 10px;
+}
+
+.pd-file-icon {
+  color: var(--sk-muted);
+}
+
+.pd-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-file-clear {
+  display: inline-flex;
+  padding: 4px;
+  color: var(--sk-muted);
+  border-radius: 6px;
+}
+
+.pd-file-clear:hover {
+  color: var(--sk-ink);
+  background: var(--sk-hover);
+}
+
+.pd-media-note {
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--sk-muted);
+}
+
+/* Fields column */
+.pd-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pd-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pd-field {
+  min-width: 0;
+}
+
+.pd-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sk-ink-soft);
+}
+
+.pd-fields :deep(.v-field) {
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.pd-fields :deep(.v-field__outline) {
+  --v-field-border-opacity: 0.16;
+}
+
+.pd-fields :deep(.v-field--focused .v-field__outline) {
+  --v-field-border-opacity: 1;
+}
+
+.pd-fields :deep(.v-text-field__prefix),
+.pd-fields :deep(.v-text-field__suffix) {
+  font-size: 13px;
+  color: var(--sk-muted);
+  opacity: 1;
+}
+
+/* Hide number spinners; they crowd the ₱ / units affixes */
+.pd-fields :deep(input[type='number']) {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.pd-fields :deep(input[type='number']::-webkit-inner-spin-button),
+.pd-fields :deep(input[type='number']::-webkit-outer-spin-button) {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.pd-fields :deep(input::placeholder),
+.pd-fields :deep(textarea::placeholder) {
+  color: var(--sk-placeholder);
+  opacity: 1;
+}
+
+.pd-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 10px 10px 14px;
+  background: var(--sk-tile);
+  border-radius: 12px;
+}
+
+.pd-status-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sk-ink);
+}
+
+.pd-status :deep(.v-switch) {
+  flex: none;
+}
+
+.pd-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--sk-border);
+}
+
+.pd-btn {
+  min-width: 96px;
+  height: 40px !important;
+  padding: 0 18px !important;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (max-width: 720px) {
+  .pd-body {
+    padding: 18px !important;
+  }
+
+  .pd-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .pd-dropzone {
+    aspect-ratio: auto;
+    height: 180px;
+  }
+
+  .pd-header {
+    padding: 16px 14px 14px 18px;
+  }
+
+  .pd-footer {
+    padding: 12px 18px;
+  }
 }
 
 .product-view-image {
