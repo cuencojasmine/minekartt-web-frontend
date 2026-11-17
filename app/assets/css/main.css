@@ -254,6 +254,56 @@ section[id],
   display: none;
 }
 
+/* ---------- Dropdown menu (small-screen nav in layouts/default.vue) ---------- */
+.v-list.sk-menu {
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
+  box-shadow: var(--sk-shadow);
+  color: var(--sk-ink-soft);
+}
+
+.sk-menu .v-list-item {
+  margin: 0 8px;
+  border-radius: var(--sk-radius-sm);
+  color: var(--sk-ink-soft);
+}
+
+.sk-menu .v-list-item-title {
+  font-weight: 600;
+}
+
+.sk-menu .v-list-item .v-icon {
+  color: rgb(var(--v-theme-accent));
+  opacity: 1;
+}
+
+/* Brand-tinted hover instead of Vuetify's gray currentColor overlay */
+.sk-menu .v-list-item > .v-list-item__overlay {
+  display: none;
+}
+
+.sk-menu .v-list-item:hover,
+.sk-menu .v-list-item:focus-visible {
+  color: var(--sk-accent-ink);
+  background: var(--sk-selected);
+}
+
+.sk-menu > .v-divider {
+  border-color: var(--sk-border);
+  opacity: 1;
+}
+
+.sk-menu .v-list-item.sk-menu-admin,
+.sk-menu .v-list-item.sk-menu-admin .v-icon {
+  color: var(--sk-admin-ink);
+}
+
+.sk-menu .v-list-item.sk-menu-admin:hover,
+.sk-menu .v-list-item.sk-menu-admin:focus-visible {
+  color: var(--sk-admin-ink-hover);
+  background: var(--sk-admin-bg-hover);
+}
+
 /* ---------- Minimal surfaces ---------- */
 .sk-surface {
   background: var(--sk-surface);

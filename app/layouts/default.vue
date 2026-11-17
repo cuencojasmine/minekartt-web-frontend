@@ -50,10 +50,12 @@
             <template #activator="{ props: menuProps }">
               <v-btn v-bind="menuProps" icon="menu" variant="text" size="small" class="d-lg-none ml-1" aria-label="Open menu" />
             </template>
-            <v-list rounded="xl" min-width="220" class="py-2" elevation="8">
-              <v-list-item v-for="link in navLinks" :key="link.title" :to="link.to" :prepend-icon="link.icon" :title="link.title" />
+            <!-- :active="false": the hash links all resolve to "/", so the router would mark
+                 every item active and paint them with a gray fill (desktop links show no active state either). -->
+            <v-list rounded="xl" min-width="220" class="sk-menu py-2" elevation="0">
+              <v-list-item v-for="link in navLinks" :key="link.title" :to="link.to" :prepend-icon="link.icon" :title="link.title" :active="false" />
               <v-divider class="my-2" />
-              <v-list-item to="/products" prepend-icon="package" title="Manage Products" base-color="accent" />
+              <v-list-item to="/products" prepend-icon="package" title="Manage Products" class="sk-menu-admin" :active="false" />
             </v-list>
           </v-menu>
         </nav>
