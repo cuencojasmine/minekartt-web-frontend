@@ -159,7 +159,7 @@
       .skb-hide-sm { display: grid; }
     }
 
-    /* Product Management (/products): plain header and one card */
+    /* Product Management (/products): header, search box and product rows */
     .skb-admin-only { display: none; }
     .skb.skb-admin .skb-store-only { display: none; }
     .skb.skb-admin .skb-admin-only { display: block; }
@@ -171,14 +171,31 @@
       height: 72px;
     }
 
-    .skb-admin-card {
-      max-width: 400px;
-      margin: 10vh auto 0;
-      padding: 32px 28px;
+    .skb-admin-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 32px;
+    }
+
+    .skb-admin-box {
+      margin-top: 24px;
+      padding: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius: 12px;
     }
+
+    .skb-admin-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+    }
+
+    .skb-admin-row + .skb-admin-row { border-top: 1px solid var(--border); }
   </style>
 
   <!-- Storefront -->
@@ -262,13 +279,29 @@
         <span class="skb-b skb-icon"></span>
         <span class="skb-b skb-icon"></span>
       </div>
-      <div class="skb-admin-card">
-        <span class="skb-b" style="width: 56px; height: 56px; margin: 0 auto; border-radius: 16px"></span>
-        <span class="skb-b" style="width: 60%; height: 20px; margin: 20px auto 0"></span>
-        <span class="skb-b" style="width: 80%; height: 12px; margin: 12px auto 0"></span>
-        <span class="skb-b" style="height: 44px; margin-top: 28px"></span>
-        <span class="skb-b" style="height: 44px; margin-top: 12px"></span>
-        <span class="skb-b" style="height: 46px; margin-top: 18px"></span>
+      <div class="skb-admin-head">
+        <div>
+          <span class="skb-b" style="width: 280px; max-width: 70vw; height: 32px"></span>
+          <span class="skb-b" style="width: 220px; max-width: 60vw; height: 14px; margin-top: 10px"></span>
+        </div>
+        <span class="skb-b" style="width: 150px; height: 44px"></span>
+      </div>
+      <div class="skb-admin-box">
+        <span class="skb-b" style="height: 48px"></span>
+      </div>
+      <div class="skb-admin-box">
+        <div class="skb-admin-row">
+          <span class="skb-b" style="width: 56px; height: 56px; flex: none"></span>
+          <span class="skb-grow"><span class="skb-b" style="width: 50%; height: 14px"></span><span class="skb-b" style="width: 75%; height: 10px; margin-top: 8px"></span></span>
+        </div>
+        <div class="skb-admin-row">
+          <span class="skb-b" style="width: 56px; height: 56px; flex: none"></span>
+          <span class="skb-grow"><span class="skb-b" style="width: 40%; height: 14px"></span><span class="skb-b" style="width: 65%; height: 10px; margin-top: 8px"></span></span>
+        </div>
+        <div class="skb-admin-row">
+          <span class="skb-b" style="width: 56px; height: 56px; flex: none"></span>
+          <span class="skb-grow"><span class="skb-b" style="width: 55%; height: 14px"></span><span class="skb-b" style="width: 70%; height: 10px; margin-top: 8px"></span></span>
+        </div>
       </div>
     </div>
   </div>
