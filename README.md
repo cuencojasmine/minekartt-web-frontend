@@ -1,75 +1,41 @@
-# Nuxt Minimal Starter
+# ShopKart — Storefront
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+The customer-facing storefront for ShopKart, built with **Nuxt 4** and **Vuetify**.
+Product data comes from the ShopKart Strapi backend ([shopkart-web-server](https://github.com/cuencojasmine/shopkart-web-server)).
 
-## Setup
+**Live site:** https://web-shopkart.vercel.app
 
-Make sure to install dependencies:
+## Features
 
-```bash
-# npm
-npm install
+- Product catalogue with search
+- Cart and wishlist drawers (saved in the browser)
+- Checkout page
+- Product management for the store manager
+- Light and dark themes, responsive layout for mobile
 
-# pnpm
-pnpm install
+## Running locally
 
-# yarn
-yarn install
+1. Install dependencies:
 
-# bun
-bun install
-```
+   ```bash
+   npm install
+   ```
 
-## Development Server
+2. Copy `.env.example` to `.env` and set the backend address:
 
-Start the development server on `http://localhost:3000`:
+   ```bash
+   NUXT_PUBLIC_STRAPI_URL=http://localhost:1337
+   ```
 
-```bash
-# npm
-npm run dev
+3. Start the dev server on `http://localhost:3000`:
 
-# pnpm
-pnpm dev
+   ```bash
+   npm run dev
+   ```
 
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
+## Production build
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
 npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
