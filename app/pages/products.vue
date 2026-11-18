@@ -1,7 +1,7 @@
 <!-- app/pages/products.vue -->
 <template>
   <v-layout class="product-layout">
-    <v-app-bar flat height="72" class="shop-header" :class="{ 'shop-header--clear': !auth.isSignedIn.value }">
+    <v-app-bar flat height="72" class="shop-header">
       <v-container class="d-flex align-center ga-2">
         <BrandLogo small />
 
@@ -13,95 +13,11 @@
         <v-btn to="/" variant="text" icon="store" aria-label="Back to Store" class="d-flex d-sm-none" />
 
         <ThemeToggle />
-
-        <template v-if="auth.isSignedIn.value">
-          <v-btn
-            variant="tonal"
-            rounded="pill"
-            prepend-icon="log-out"
-            class="d-none d-sm-flex"
-            @click="signOut"
-          >
-            Sign out ({{ auth.username.value }})
-          </v-btn>
-          <v-btn
-            icon="log-out"
-            variant="text"
-            aria-label="Sign out"
-            class="d-flex d-sm-none"
-            @click="signOut"
-          />
-        </template>
       </v-container>
     </v-app-bar>
 
     <v-main class="product-page">
-      <!-- ========================================
-           SIGN IN (only Store Manager accounts can change products)
-      ========================================= -->
-      <div v-if="!auth.isSignedIn.value" class="login-scene">
-        <!-- Sky backdrop: rings behind the card and clouds along the bottom -->
-        <div class="login-sky" aria-hidden="true">
-          <span class="login-ring login-ring--1" />
-          <span class="login-ring login-ring--2" />
-          <span class="login-ring login-ring--3" />
-          <span class="login-clouds" />
-        </div>
-
-        <section class="login-card" aria-labelledby="login-title">
-          <div class="login-icon">
-            <img src="/logo.png" alt="" width="34" height="34" class="login-logo--light" />
-            <img src="/logo-dark.png" alt="" width="34" height="34" class="login-logo--dark" />
-          </div>
-
-          <h1 id="login-title" class="login-title">Store Manager sign in</h1>
-          <p class="login-subtitle">
-            Add, edit and remove MineKartt products. Only Store Manager accounts can sign in.
-          </p>
-
-          <v-form ref="loginForm" class="login-form" @submit.prevent="signIn">
-            <v-text-field
-              v-model="credentials.identifier"
-              class="login-field"
-              placeholder="Email or username"
-              aria-label="Email or username"
-              prepend-inner-icon="mail"
-              variant="solo-filled"
-              density="comfortable"
-              flat
-              hide-details="auto"
-              autocomplete="username"
-              :rules="[(value) => !!value?.trim() || 'Email or username is required']"
-            />
-            <v-text-field
-              v-model="credentials.password"
-              class="login-field"
-              placeholder="Password"
-              aria-label="Password"
-              prepend-inner-icon="lock"
-              variant="solo-filled"
-              density="comfortable"
-              flat
-              hide-details="auto"
-              :type="showPassword ? 'text' : 'password'"
-              :append-inner-icon="showPassword ? 'eye' : 'eye-off'"
-              autocomplete="current-password"
-              :rules="[(value) => !!value || 'Password is required']"
-              @click:append-inner="showPassword = !showPassword"
-            />
-
-            <v-alert v-if="loginError" type="error" variant="tonal" density="compact" class="mb-4 text-left">
-              {{ loginError }}
-            </v-alert>
-
-            <v-btn type="submit" class="login-submit" size="large" block :loading="signingIn">
-              Sign in
-            </v-btn>
-          </v-form>
-        </section>
-      </div>
-
-      <v-container v-else class="py-8">
+      <v-container class="py-8">
         <!-- PAGE HEADER -->
         <div class="d-flex flex-wrap align-center justify-space-between ga-4 mb-6">
           <div>
@@ -605,48 +521,6 @@ useHead({
 
 const { STRAPI_URL } = useStrapi()
 
-// Create, update, delete and upload need a signed-in Store Manager.
-// auth.authFetch() works like $fetch but adds "Authorization: Bearer <jwt>".
-const auth = useAuth()
-const loginForm = ref(null)
-const credentials = reactive({ identifier: '', password: '' })
-const showPassword = ref(false)
-const signingIn = ref(false)
-const loginError = ref('')
-
-async function signIn() {
-  const validation = await loginForm.value?.validate()
-  if (validation && !validation.valid) return
-
-  signingIn.value = true
-  loginError.value = ''
-
-  try {
-    await auth.login(credentials.identifier.trim(), credentials.password)
-    credentials.password = ''
-    showSnackbar(`Welcome, ${auth.username.value}!`, 'success')
-    await getProducts()
-  } catch (error) {
-    loginError.value = getApiErrorMessage(error, 'Unable to sign in.')
-  } finally {
-    signingIn.value = false
-  }
-}
-
-async function signOut() {
-  await auth.logout()
-  showSnackbar('Signed out.', 'info')
-}
-
-// If the session expires mid-task, close any open dialog so the sign-in form shows.
-watch(auth.isSignedIn, (signedIn) => {
-  if (!signedIn) {
-    productDialog.value = false
-    deleteDialog.value = false
-    viewDialog.value = false
-  }
-})
-
 // ===== 9. State variables =====
 const products = ref([])
 const loading = ref(false)
@@ -852,7 +726,7 @@ async function saveProduct() {
 
 // ===== 19. CREATE =====
 async function createProduct() {
-  const response = await auth.authFetch('/api/products', {
+  const response = await $fetch(`${STRAPI_URL}/api/products`, {
     method: 'POST',
     body: {
       data: {
@@ -885,7 +759,7 @@ async function uploadProductImage(productId) {
   formData.append('field', 'image')
 
   // Do not set Content-Type manually; the browser adds the multipart boundary.
-  await auth.authFetch('/api/upload', {
+  await $fetch(`${STRAPI_URL}/api/upload`, {
     method: 'POST',
     body: formData,
   })
@@ -895,8 +769,8 @@ async function uploadProductImage(productId) {
 async function updateProduct() {
   if (!selectedProduct.value) return
 
-  const response = await auth.authFetch(
-    `/api/products/${selectedProduct.value.documentId}`,
+  const response = await $fetch(
+    `${STRAPI_URL}/api/products/${selectedProduct.value.documentId}`,
     {
       method: 'PUT',
       body: {
@@ -926,8 +800,8 @@ async function deleteProduct() {
   deleting.value = true
 
   try {
-    await auth.authFetch(
-      `/api/products/${selectedProduct.value.documentId}`,
+    await $fetch(
+      `${STRAPI_URL}/api/products/${selectedProduct.value.documentId}`,
       { method: 'DELETE' },
     )
 
@@ -1000,7 +874,7 @@ function showSnackbar(message, color = 'success') {
 
 function getErrorMessage(error) {
   if (error?.statusCode === 403) {
-    return 'This account is not allowed to manage products. Sign in as a Store Manager.'
+    return 'Strapi refused this action. Check the Public role permissions in the Strapi admin panel.'
   }
 
   return (
@@ -1036,8 +910,7 @@ function closeProductDialog() {
 }
 
 onMounted(() => {
-  auth.restoreSession()
-  if (auth.isSignedIn.value) getProducts()
+  getProducts()
 })
 </script>
 
@@ -1061,203 +934,6 @@ onMounted(() => {
 .logo-link {
   text-decoration: none;
   white-space: nowrap;
-}
-
-/* ===== Store Manager sign-in ===== */
-.shop-header--clear {
-  background: transparent !important;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-bottom-color: transparent;
-}
-
-.login-scene {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 72px);
-  min-height: calc(100dvh - 72px);
-  padding: 32px 16px 72px;
-}
-
-/* Fixed so the sky also fills the area behind the transparent app bar */
-.login-sky {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: var(--sk-login-sky);
-}
-
-/* Thin rings centered on the card, fading out toward the bottom */
-.login-ring {
-  position: absolute;
-  top: 54%;
-  left: 50%;
-  border: 1px solid var(--sk-login-ring);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 75%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 75%);
-}
-
-.login-ring--1 {
-  width: 620px;
-  height: 620px;
-}
-
-.login-ring--2 {
-  width: 900px;
-  height: 900px;
-}
-
-.login-ring--3 {
-  width: 1200px;
-  height: 1200px;
-}
-
-/* Soft cloud bank built from overlapping, blurred ellipses */
-.login-clouds {
-  position: absolute;
-  inset: auto -10% -6% -10%;
-  height: 52%;
-  filter: blur(14px);
-  background:
-    radial-gradient(ellipse 22% 38% at 6% 62%, var(--sk-login-cloud) 0%, transparent 70%),
-    radial-gradient(ellipse 18% 30% at 20% 48%, var(--sk-login-cloud) 0%, transparent 70%),
-    radial-gradient(ellipse 26% 42% at 34% 78%, var(--sk-login-cloud) 0%, transparent 72%),
-    radial-gradient(ellipse 20% 34% at 52% 70%, var(--sk-login-cloud) 0%, transparent 70%),
-    radial-gradient(ellipse 18% 32% at 68% 50%, var(--sk-login-cloud) 0%, transparent 70%),
-    radial-gradient(ellipse 24% 40% at 82% 66%, var(--sk-login-cloud) 0%, transparent 72%),
-    radial-gradient(ellipse 20% 36% at 96% 46%, var(--sk-login-cloud) 0%, transparent 70%),
-    linear-gradient(180deg, transparent 55%, var(--sk-login-cloud) 100%);
-}
-
-.login-card {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 400px;
-  padding: 32px 28px 28px;
-  text-align: center;
-  background: var(--sk-login-card);
-  border: 1px solid var(--sk-login-card-border);
-  border-radius: 24px;
-  box-shadow: var(--sk-login-card-shadow);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  animation: login-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.login-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 18px;
-  background: var(--sk-login-tile);
-  border: 1px solid var(--sk-login-card-border);
-  border-radius: 16px;
-  box-shadow:
-    0 10px 20px -10px rgba(var(--sk-brand-900-rgb), 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.login-icon img {
-  display: block;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-}
-
-/* Navy logo mark in dark mode */
-.login-icon .login-logo--dark,
-html[data-theme='dark'] .login-icon .login-logo--light {
-  display: none;
-}
-
-html[data-theme='dark'] .login-icon .login-logo--dark {
-  display: block;
-}
-
-.login-title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--sk-ink);
-}
-
-.login-subtitle {
-  max-width: 300px;
-  margin: 6px auto 24px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--sk-muted);
-}
-
-.login-form {
-  text-align: left;
-}
-
-.login-field {
-  margin-bottom: 12px;
-}
-
-.login-field :deep(.v-field) {
-  background: var(--sk-login-field);
-  border-radius: 10px;
-  font-size: 14px;
-  transition: background-color var(--sk-dur-fast) var(--sk-ease), box-shadow var(--sk-dur-fast) var(--sk-ease);
-}
-
-.login-field :deep(.v-field--focused) {
-  background: var(--sk-login-field-focus);
-  box-shadow: 0 0 0 2px rgba(var(--sk-brand-500-rgb), 0.45);
-}
-
-.login-field :deep(.v-field__prepend-inner .v-icon),
-.login-field :deep(.v-field__append-inner .v-icon) {
-  font-size: 18px;
-  color: var(--sk-muted);
-  opacity: 1;
-}
-
-.login-field :deep(input::placeholder) {
-  color: var(--sk-placeholder);
-  opacity: 1;
-}
-
-.login-submit {
-  margin-top: 6px;
-  height: 46px !important;
-  border-radius: 10px;
-  color: var(--sk-login-btn-ink) !important;
-  background: var(--sk-login-btn) !important;
-  box-shadow:
-    0 10px 20px -10px rgba(var(--sk-brand-900-rgb), 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-@keyframes login-rise {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (max-width: 599px) {
-  .login-card {
-    padding: 28px 20px 24px;
-  }
 }
 
 .product-table-card {
