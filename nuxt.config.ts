@@ -9,6 +9,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   app: {
+    // Fade between pages (.page-* in main.css); out-in so the two pages never overlap
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       htmlAttrs: { lang: 'en' },
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],

@@ -16,21 +16,25 @@
 
       <v-container class="hero-inner">
         <div class="hero-copy">
-          <span class="hero-chip">
+          <!-- Entrance order: chip, headline (Blur Text, word by word), then the rest rises in.
+               --rise-delay staggers the .sk-rise pieces (main.css). -->
+          <span class="hero-chip sk-rise">
             <span class="hero-chip-dot" aria-hidden="true" />
             New arrivals every week
           </span>
 
+          <!-- The accent line keeps going where the first line's words stop (start = 0.1 + 3 words x 0.05),
+               then the shine begins once its words have landed -->
           <h1 id="hero-title" class="hero-title">
-            Everything you love, <span class="hero-title-accent">in one Kartt.</span>
+            <BitsBlurText text="Everything you love," :start="0.1" /> <span class="hero-title-accent"><BitsShinyText :active="heroLanded" :delay="0.4"><BitsBlurText text="in one Kartt." :start="0.25" @complete="heroLanded = true" /></BitsShinyText></span>
           </h1>
 
-          <p class="hero-subtitle">
+          <p class="hero-subtitle sk-rise" style="--rise-delay: 0.4s">
             Gadgets, fashion, sports gear, beauty, and home essentials with free delivery
             and secure checkout.
           </p>
 
-          <form class="hero-search" role="search" @submit.prevent="scrollToProducts">
+          <form class="hero-search sk-rise" style="--rise-delay: 0.5s" role="search" @submit.prevent="scrollToProducts">
             <v-icon icon="search" class="hero-search-icon" />
             <input
               v-model="search"
@@ -45,7 +49,7 @@
             </v-btn>
           </form>
 
-          <div class="hero-popular">
+          <div class="hero-popular sk-rise" style="--rise-delay: 0.6s">
             <span class="hero-popular-label">Popular</span>
             <button
               v-for="name in popularCategories"
@@ -71,9 +75,9 @@
     <section class="why">
       <v-container class="pt-8 pt-md-10 pb-8 pb-md-12">
         <div class="why-bento">
-          <div class="why-intro">
+          <div v-reveal class="why-intro">
             <div class="sk-eyebrow why-eyebrow">Why MineKartt</div>
-            <h2 class="why-title">Why shoppers choose us</h2>
+            <h2 class="why-title"><BitsBlurText text="Why shoppers choose us" :start="0.15" /></h2>
             <p class="why-text">
               One cart for every part of your day, with prices you can count on and help
               whenever you need it.
@@ -83,7 +87,7 @@
             </v-btn>
           </div>
 
-          <div v-for="feature in features" :key="feature.title" class="why-tile">
+          <div v-for="(feature, index) in features" :key="feature.title" v-reveal="0.08 + index * 0.06" class="why-tile">
             <span class="why-icon" :class="`why-icon-${feature.tone}`">
               <v-icon :icon="feature.icon" size="22" />
             </span>
@@ -91,7 +95,7 @@
             <p class="why-tile-text">{{ feature.text }}</p>
           </div>
 
-          <div class="why-stats">
+          <div v-reveal="0.32" class="why-stats">
             <div class="why-stat">
               <div class="why-stat-value">
                 <span v-if="isFirstLoad" class="sk-skel stat-skel" aria-label="Loading" />
@@ -118,8 +122,8 @@
     <section id="categories">
       <v-container class="pb-8 pb-md-12">
         <div class="section-head section-head-center">
-          <div class="sk-eyebrow">Browse</div>
-          <h2 class="sk-section-title">Shop by Category</h2>
+          <div v-reveal class="sk-eyebrow">Browse</div>
+          <h2 class="sk-section-title"><BitsBlurText text="Shop by Category" /></h2>
         </div>
 
         <div class="category-bento">
@@ -127,6 +131,7 @@
             v-for="(category, index) in SHOP_CATEGORIES"
             :key="category.name"
             type="button"
+            v-reveal="index * 0.05"
             class="category-tile sk-clay"
             :class="[`category-tile-${index}`, { 'category-active': selectedCategory === category.name }]"
             :aria-pressed="selectedCategory === category.name"
@@ -168,12 +173,12 @@
     <section id="products" class="products">
       <v-container class="pb-8 pb-md-12">
         <div class="section-head section-head-center">
-          <div class="sk-eyebrow">Catalog</div>
-          <h2 class="sk-section-title">Our Products</h2>
+          <div v-reveal class="sk-eyebrow">Catalog</div>
+          <h2 class="sk-section-title"><BitsBlurText text="Our Products" /></h2>
         </div>
 
         <!-- Category tabs (Panto-style pill), scrollable on small screens -->
-        <div class="tabs-wrap">
+        <div v-reveal class="tabs-wrap">
           <div class="tabs sk-glass sk-scroll-x" role="group" aria-label="Filter by category">
             <button
               v-for="option in categoryOptions"
@@ -189,7 +194,7 @@
           </div>
         </div>
 
-        <div class="toolbar">
+        <div v-reveal="0.06" class="toolbar">
           <form class="toolbar-search" role="search" @submit.prevent>
             <v-icon icon="search" size="20" class="toolbar-search-icon" />
             <input
@@ -288,12 +293,12 @@
     <section id="deals">
       <v-container class="pb-8 pb-md-12">
         <div class="section-head section-head-center">
-          <div class="sk-eyebrow">Promos</div>
-          <h2 class="sk-section-title">Deals For You</h2>
+          <div v-reveal class="sk-eyebrow">Promos</div>
+          <h2 class="sk-section-title"><BitsBlurText text="Deals For You" /></h2>
         </div>
 
         <div class="promo-bento">
-          <div v-for="promo in promos" :key="promo.category" class="promo" :class="`promo-${promo.theme}`">
+          <div v-for="(promo, index) in promos" :key="promo.category" v-reveal="index * 0.08" class="promo" :class="`promo-${promo.theme}`">
             <div class="promo-content">
               <div class="promo-eyebrow">{{ promo.eyebrow }}</div>
               <h3 class="promo-title">{{ promo.title }}</h3>
@@ -326,14 +331,14 @@
          NEWSLETTER
     ========================================= -->
     <v-container class="pb-8 pb-md-12">
-      <section class="newsletter">
+      <section v-reveal class="newsletter">
         <!-- The googly eyes from the MineKartt cart -->
         <span class="newsletter-eyes" aria-hidden="true"><span /><span /></span>
         <div class="newsletter-orb" />
         <v-row align="center" class="position-relative">
           <v-col cols="12" md="6" class="text-center text-md-left">
             <div class="newsletter-eyebrow">Newsletter</div>
-            <h2 class="newsletter-title">Get deals in your inbox</h2>
+            <h2 class="newsletter-title"><BitsBlurText text="Get deals in your inbox" :start="0.15" /></h2>
             <p class="newsletter-text mt-2">
               Updates on new products, exclusive deals, and promos straight to your inbox.
             </p>
@@ -373,6 +378,8 @@ const heroSources = [
 ]
 const HERO_DEFAULT = 'landscape'
 const theme = useTheme()
+// The accent line's shine waits for its Blur Text to finish
+const heroLanded = ref(false)
 const heroSet = computed(() => (theme.global.current.value.dark ? 'dark' : 'mist'))
 const heroUrl = (set: string, file: string) => `/images/hero-${set}-${file}.jpg`
 
@@ -577,6 +584,9 @@ onMounted(() => {
 .hero-photo {
   position: absolute;
   inset: 0;
+  /* Fades in (opacity only). A scale-in here made the GPU re-draw the whole masked photo
+     every frame at the busiest moment of the load, which was the biggest frame-rate cost. */
+  animation: hero-photo-in 0.9s var(--sk-ease) both;
 }
 
 .hero-photo img {
@@ -826,10 +836,33 @@ html[data-theme='dark'] .hero-title-accent {
   border-radius: 50%;
   box-shadow: 0 0 0 1px var(--sk-glass-edge), var(--sk-shadow);
   transform: translateX(-50%);
+  /* Rises in after the hero copy, then starts bobbing */
+  animation: sk-rise var(--sk-dur-slow) var(--sk-ease) 0.8s both, hero-bob 2.4s ease-in-out 1.4s infinite;
 }
 
 html[data-theme='dark'] .hero-scroll {
   color: var(--sk-ink);
+}
+
+@keyframes hero-photo-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, 6px);
+  }
 }
 
 /* Portrait screens (phones, tablets held upright): the portrait photo fills the hero and

@@ -489,3 +489,63 @@ html.sk-theme-switching::view-transition-new(root) {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Motion helpers ---------- */
+/* These animate the `translate` property, not `transform`, so they never fight the
+   hover lifts (transform: translateY) that the same elements have. */
+
+/* Hero entrance: rises in once on load. Stagger with style="--rise-delay: 0.5s". */
+.sk-rise {
+  animation: sk-rise var(--sk-dur-slow) var(--sk-ease) var(--rise-delay, 0s) both;
+}
+
+/* Scroll reveal (plugins/reveal.client.ts adds .sk-reveal, then .is-visible in view) */
+.sk-reveal {
+  opacity: 0;
+}
+
+.sk-reveal.is-visible {
+  animation: sk-rise var(--sk-dur-slow) var(--sk-ease) var(--reveal-delay, 0s) both;
+}
+
+@keyframes sk-rise {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+/* Page change: the old page fades out quickly, the new one rises in */
+.page-enter-active {
+  transition: opacity 0.38s var(--sk-ease), translate 0.38s var(--sk-ease);
+}
+
+.page-leave-active {
+  transition: opacity 0.16s ease-in;
+}
+
+.page-enter-from {
+  opacity: 0;
+  translate: 0 10px;
+}
+
+.page-leave-to {
+  opacity: 0;
+}
+
+/* Reduced motion: everything appears in place, with no waiting on stagger delays */
+@media (prefers-reduced-motion: reduce) {
+  .sk-rise,
+  .sk-reveal.is-visible {
+    animation: none;
+  }
+
+  .sk-reveal {
+    opacity: 1;
+  }
+}
