@@ -20,7 +20,7 @@
 
       <v-btn
         icon="heart"
-        :color="inWishlist ? 'pink' : undefined"
+        :color="inWishlist ? 'rose' : undefined"
         :aria-label="inWishlist ? 'Remove from wishlist' : 'Add to wishlist'"
         :aria-pressed="inWishlist"
         variant="text"
@@ -113,7 +113,7 @@ const buttonIcon = computed(() => {
   background: var(--sk-surface);
   border: 1px solid var(--sk-border);
   border-radius: 22px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform var(--sk-dur) var(--sk-ease), box-shadow var(--sk-dur) var(--sk-ease), border-color var(--sk-dur) var(--sk-ease);
 }
 
 .product-card:hover {
@@ -141,7 +141,7 @@ const buttonIcon = computed(() => {
 .product-img :deep(img) {
   object-fit: contain !important;
   padding: 12px;
-  transition: transform 0.3s ease;
+  transition: transform var(--sk-dur-slow) var(--sk-ease);
 }
 
 .product-card:hover .product-img :deep(img) {

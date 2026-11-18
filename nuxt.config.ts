@@ -4,20 +4,23 @@ export default defineNuxtConfig({
   // cart / wishlist are saved in localStorage, so there is nothing to pre-render.
   ssr: false,
 
+  // Hides the Nuxt DevTools button (the Nuxt logo pinned to the bottom of the page in
+  // dev mode). It never shows on the deployed site either way.
+  devtools: { enabled: false },
+
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
       link: [
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-        { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        // The tab icons follow the light / dark theme, so plugins/vuetify.ts adds them
+        // (list in utils/theme.ts). ?v=3 makes browsers drop an old cached icon.
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png?v=3' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
         },
       ],
     },

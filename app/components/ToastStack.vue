@@ -63,8 +63,8 @@ const META: Record<ToastType, { icon: string }> = {
 
 /* ===== Card ===== */
 .toast {
-  --tone: #0ea5e9;
-  --tint: rgba(14, 165, 233, 0.16);
+  --tone: #204654;
+  --tint: rgba(61, 127, 146, 0.16);
 
   position: relative;
   display: flex;
@@ -82,10 +82,14 @@ const META: Record<ToastType, { icon: string }> = {
   box-shadow: var(--sk-shadow-sm), 0 12px 32px -12px var(--sk-shadow-soft);
 }
 
-.toast--info { --tone: #0ea5e9; --tint: rgba(14, 165, 233, 0.2); }
-.toast--success { --tone: #22c55e; --tint: rgba(34, 197, 94, 0.2); }
+.toast--info { --tone: #204654; --tint: rgba(61, 127, 146, 0.2); }
+.toast--success { --tone: #3b7520; --tint: rgba(202, 255, 166, 0.55); }
 .toast--warning { --tone: #f59e0b; --tint: rgba(245, 158, 11, 0.24); }
 .toast--error { --tone: #ef4444; --tint: rgba(239, 68, 68, 0.18); }
+
+/* Lighter teal and meadow tones so the icons stay visible on the dark surface */
+html[data-theme='dark'] .toast--info { --tone: #a9e0f1; }
+html[data-theme='dark'] .toast--success { --tone: #caffa6; --tint: rgba(202, 255, 166, 0.16); }
 
 .toast-icon {
   display: grid;
@@ -97,8 +101,8 @@ const META: Record<ToastType, { icon: string }> = {
   background: var(--sk-surface);
   border-radius: 11px;
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 4px 12px -4px rgba(15, 23, 42, 0.12);
+    0 1px 2px rgba(16, 42, 51, 0.06),
+    0 4px 12px -4px rgba(16, 42, 51, 0.12);
   animation: toast-icon-pop 0.5s 0.12s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 

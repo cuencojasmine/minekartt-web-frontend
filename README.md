@@ -1,7 +1,7 @@
-# ShopKart — Storefront
+# MineKartt — Storefront
 
-The customer-facing storefront for ShopKart, built with **Nuxt 4** and **Vuetify**.
-Product data comes from the ShopKart Strapi backend ([shopkart-web-server](https://github.com/cuencojasmine/shopkart-web-server)).
+The customer-facing storefront for MineKartt (formerly ShopKart), built with **Nuxt 4** and **Vuetify**.
+Product data comes from the Strapi backend ([shopkart-web-server](https://github.com/cuencojasmine/shopkart-web-server)).
 
 **Live site:** https://web-shopkart.vercel.app
 

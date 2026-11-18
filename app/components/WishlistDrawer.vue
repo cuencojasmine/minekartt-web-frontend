@@ -8,11 +8,11 @@
     class="sk-drawer"
   >
     <div class="d-flex align-center pa-4">
-      <v-avatar color="pink" variant="tonal" rounded="lg" size="38" class="mr-3">
+      <v-avatar color="rose" variant="tonal" rounded="lg" size="38" class="mr-3">
         <v-icon icon="heart" class="sk-icon-fill" />
       </v-avatar>
       <span class="text-h6 font-weight-bold">My Wishlist</span>
-      <v-chip size="small" color="pink" variant="tonal" class="ml-2">{{ wishlist.count.value }}</v-chip>
+      <v-chip size="small" color="rose" variant="tonal" class="ml-2">{{ wishlist.count.value }}</v-chip>
       <v-spacer />
       <v-btn icon="x" variant="text" aria-label="Close wishlist" @click="wishlist.drawerOpen.value = false" />
     </div>
@@ -36,7 +36,7 @@
     </div>
 
     <div v-else-if="!wishlist.count.value" class="d-flex flex-column align-center justify-center pa-8 text-center mt-10">
-      <v-avatar color="pink" variant="tonal" size="96">
+      <v-avatar color="rose" variant="tonal" size="96">
         <v-icon icon="heart" size="44" />
       </v-avatar>
       <h3 class="mt-4">Your wishlist is empty</h3>

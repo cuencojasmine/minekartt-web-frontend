@@ -1,177 +1,161 @@
-<!-- app/pages/index.vue — E-Commerce Homepage -->
+<!-- app/pages/index.vue — MineKartt homepage -->
 <template>
   <div>
     <!-- ========================================
-         HERO SECTION (bento showcase of Strapi products)
+         HERO (full-bleed photo; landscape and portrait crops)
     ========================================= -->
-    <section class="hero">
-      <div class="hero-orb hero-orb-1" />
-      <div class="hero-orb hero-orb-2" />
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- The portrait photo leaves its empty wall at the top, the landscape one on the left,
+           so the copy moves with it (see the orientation media queries below). -->
+      <!-- Light theme: cream-wall photos (hero-mist-*); dark theme: deep-teal ones (hero-dark-*) -->
+      <picture class="hero-photo" aria-hidden="true">
+        <source v-for="source in heroSources" :key="source.media" :media="source.media" :srcset="heroUrl(heroSet, source.file)" />
+        <img :src="heroUrl(heroSet, HERO_DEFAULT)" alt="" fetchpriority="high" decoding="async" />
+      </picture>
+      <div class="hero-scrim" aria-hidden="true" />
 
       <v-container class="hero-inner">
-        <v-row align="center">
-          <v-col cols="12" md="6" class="pr-md-8">
-            <span class="hero-chip">
-              <v-icon icon="zap" size="16" color="primary" class="mr-1" />
-              New arrivals every week
-            </span>
-            <h1 class="hero-title mt-5">
-              Shop smarter.<br>Live better.
-            </h1>
-            <p class="hero-subtitle mt-4">
-              Gadgets, fashion, sports gear, beauty, and home essentials, all in one place
-              with free delivery and secure checkout.
+        <div class="hero-copy">
+          <span class="hero-chip">
+            <span class="hero-chip-dot" aria-hidden="true" />
+            New arrivals every week
+          </span>
+
+          <h1 id="hero-title" class="hero-title">
+            Everything you love, <span class="hero-title-accent">in one Kartt.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Gadgets, fashion, sports gear, beauty, and home essentials with free delivery
+            and secure checkout.
+          </p>
+
+          <form class="hero-search" role="search" @submit.prevent="scrollToProducts">
+            <v-icon icon="search" class="hero-search-icon" />
+            <input
+              v-model="search"
+              type="search"
+              class="hero-search-input"
+              placeholder="Search products"
+              aria-label="Search products"
+            >
+            <v-btn type="submit" color="meadow" variant="flat" :icon="xs" class="hero-search-btn" aria-label="Search">
+              <v-icon v-if="xs" icon="arrow-right" />
+              <span v-else>Search</span>
+            </v-btn>
+          </form>
+
+          <div class="hero-popular">
+            <span class="hero-popular-label">Popular</span>
+            <button
+              v-for="name in popularCategories"
+              :key="name"
+              type="button"
+              class="hero-popular-chip"
+              @click="selectCategory(name)"
+            >
+              {{ name }}
+            </button>
+          </div>
+        </div>
+      </v-container>
+
+      <button type="button" class="hero-scroll" aria-label="Scroll to products" @click="scrollToProducts">
+        <v-icon icon="chevron-down" size="22" />
+      </button>
+    </section>
+
+    <!-- ========================================
+         WHY MINEKARTT (bento)
+    ========================================= -->
+    <section class="why">
+      <v-container class="pt-8 pt-md-10 pb-8 pb-md-12">
+        <div class="why-bento">
+          <div class="why-intro">
+            <div class="sk-eyebrow why-eyebrow">Why MineKartt</div>
+            <h2 class="why-title">Why shoppers choose us</h2>
+            <p class="why-text">
+              One cart for every part of your day, with prices you can count on and help
+              whenever you need it.
             </p>
-            <div class="d-flex flex-wrap ga-3 mt-8">
-              <v-btn size="x-large" color="primary" rounded="pill" append-icon="arrow-right" class="hero-cta" @click="scrollToProducts">
-                Shop Now
-              </v-btn>
-              <v-btn size="x-large" variant="outlined" rounded="pill" prepend-icon="package" class="sk-admin-btn" to="/products">
-                Manage Products
-              </v-btn>
-            </div>
+            <v-btn color="meadow" variant="flat" append-icon="arrow-right" class="mt-6" @click="scrollToProducts">
+              Start shopping
+            </v-btn>
+          </div>
 
-            <div class="hero-stats d-flex ga-6 mt-8">
-              <div>
-                <div class="stat-value">
-                  <span v-if="isFirstLoad" class="sk-skel stat-skel" aria-label="Loading" />
-                  <BitsCountUp v-else :to="products.length" :duration="1.2" />
-                </div>
-                <div class="stat-label">Products</div>
-              </div>
-              <div>
-                <div class="stat-value"><BitsCountUp :to="SHOP_CATEGORIES.length" :duration="1.2" :delay="0.15" /></div>
-                <div class="stat-label">Categories</div>
-              </div>
-              <div>
-                <div class="stat-value">Free</div>
-                <div class="stat-label">Delivery</div>
-              </div>
-            </div>
-          </v-col>
+          <div v-for="feature in features" :key="feature.title" class="why-tile">
+            <span class="why-icon" :class="`why-icon-${feature.tone}`">
+              <v-icon :icon="feature.icon" size="22" />
+            </span>
+            <h3 class="why-tile-title">{{ feature.title }}</h3>
+            <p class="why-tile-text">{{ feature.text }}</p>
+          </div>
 
-          <!-- Bento showcase: featured product + two smaller tiles -->
-          <v-col cols="12" md="6">
-            <div class="hero-bento">
-              <template v-if="heroProducts.length">
-                <button
-                  v-for="(product, index) in heroProducts"
-                  :key="product.documentId"
-                  type="button"
-                  class="hero-tile sk-glass"
-                  :class="index === 0 ? 'hero-tile-main' : 'hero-tile-side'"
-                  :aria-label="`Find ${product.name}`"
-                  @click="findProduct(product)"
-                >
-                  <span v-if="index === 0" class="tile-badge">Featured</span>
-                  <v-img
-                    :src="getProductImageUrl(product.image, index === 0 ? 'medium' : 'small')"
-                    :alt="product.name"
-                    class="tile-img sk-product-img"
-                  />
-                  <span class="tile-label">
-                    <span class="tile-name text-truncate">{{ product.name }}</span>
-                    <span class="tile-price">{{ formatCurrency(product.price) }}</span>
-                  </span>
-                </button>
-              </template>
-              <!-- Loading: tiles shaped like the real ones (image + name/price label) -->
-              <template v-else-if="isFirstLoad">
-                <div
-                  v-for="n in 3"
-                  :key="n"
-                  class="hero-tile hero-tile-skel sk-glass"
-                  :class="n === 1 ? 'hero-tile-main' : 'hero-tile-side'"
-                  aria-hidden="true"
-                >
-                  <span v-if="n === 1" class="sk-skel sk-skel-pill tile-badge-skel" />
-                  <span class="sk-skel tile-img-skel" />
-                  <span class="tile-label">
-                    <span class="sk-skel" style="width: 55%; height: 12px" />
-                    <span class="sk-skel" style="width: 34%; height: 12px" />
-                  </span>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="n in 3" :key="n" class="hero-tile sk-glass d-flex align-center justify-center" :class="n === 1 ? 'hero-tile-main' : 'hero-tile-side'">
-                  <v-icon icon="shopping-cart" size="56" color="primary" class="opacity-40" />
-                </div>
-              </template>
+          <div class="why-stats">
+            <div class="why-stat">
+              <div class="why-stat-value">
+                <span v-if="isFirstLoad" class="sk-skel stat-skel" aria-label="Loading" />
+                <BitsCountUp v-else :to="products.length" :duration="1.2" />
+              </div>
+              <div class="why-stat-label">Products</div>
             </div>
-          </v-col>
-        </v-row>
+            <div class="why-stat">
+              <div class="why-stat-value"><BitsCountUp :to="SHOP_CATEGORIES.length" :duration="1.2" :delay="0.15" /></div>
+              <div class="why-stat-label">Categories</div>
+            </div>
+            <div class="why-stat">
+              <div class="why-stat-value"><BitsCountUp :to="PAYMENT_METHODS.length" :duration="1.2" :delay="0.3" /></div>
+              <div class="why-stat-label">Ways to pay</div>
+            </div>
+          </div>
+        </div>
       </v-container>
     </section>
 
     <!-- ========================================
-         PROMO / FEATURE STRIP
-    ========================================= -->
-    <v-container class="pt-8 pb-2">
-      <div class="features">
-        <div v-for="feature in features" :key="feature.title" class="feature">
-          <span class="feature-icon">
-            <v-icon :icon="feature.icon" size="22" />
-          </span>
-          <div class="min-w-0">
-            <div class="feature-title">{{ feature.title }}</div>
-            <div class="feature-text">{{ feature.text }}</div>
-          </div>
-        </div>
-      </div>
-    </v-container>
-
-    <!-- ========================================
-         CATEGORY TICKER (looping quick links; pauses on hover)
-    ========================================= -->
-    <v-container class="pt-4 pb-0">
-      <BitsLogoLoop :items="SHOP_CATEGORIES" :speed="45" aria-label="Shop by category">
-        <template #item="{ item }">
-          <button
-            type="button"
-            class="ticker-chip"
-            :class="{ 'ticker-chip-active': selectedCategory === item.name }"
-            :aria-pressed="selectedCategory === item.name"
-            @click="selectCategory(item.name)"
-          >
-            <v-icon :icon="item.icon" size="18" :color="item.color" />
-            <span>{{ item.name }}</span>
-            <span class="ticker-count">{{ categoryCounts[item.name] || 0 }}</span>
-          </button>
-        </template>
-      </BitsLogoLoop>
-    </v-container>
-
-    <!-- ========================================
-         PRODUCT CATEGORIES (clay tiles)
+         CATEGORIES (bento of clay tiles)
     ========================================= -->
     <section id="categories">
-      <v-container class="py-10">
-        <div class="section-head">
-          <div>
-            <div class="sk-eyebrow">Browse</div>
-            <h2 class="sk-section-title">Explore Categories</h2>
-          </div>
-          <v-btn v-if="selectedCategory !== ALL_CATEGORIES" variant="text" color="primary" append-icon="x" @click="clearCategory">
-            All Categories
-          </v-btn>
+      <v-container class="pb-8 pb-md-12">
+        <div class="section-head section-head-center">
+          <div class="sk-eyebrow">Browse</div>
+          <h2 class="sk-section-title">Shop by Category</h2>
         </div>
 
-        <div class="category-row sk-scroll-x">
+        <div class="category-bento">
           <button
-            v-for="category in SHOP_CATEGORIES"
+            v-for="(category, index) in SHOP_CATEGORIES"
             :key="category.name"
             type="button"
             class="category-tile sk-clay"
-            :class="{ 'category-active': selectedCategory === category.name }"
+            :class="[`category-tile-${index}`, { 'category-active': selectedCategory === category.name }]"
             :aria-pressed="selectedCategory === category.name"
             @click="selectCategory(category.name)"
           >
-            <v-avatar :color="category.color" variant="tonal" size="56" class="category-icon">
-              <v-icon :icon="category.icon" size="28" />
-            </v-avatar>
-            <span class="category-name">{{ category.name }}</span>
-            <span class="category-count">
-              {{ categoryCounts[category.name] || 0 }} {{ categoryCounts[category.name] === 1 ? 'item' : 'items' }}
+            <span class="category-text">
+              <v-avatar :color="category.color" variant="tonal" size="40" class="category-icon">
+                <v-icon :icon="category.icon" size="20" />
+              </v-avatar>
+              <span class="category-name">{{ category.name }}</span>
+              <span class="category-count">
+                {{ categoryCounts[category.name] || 0 }} {{ categoryCounts[category.name] === 1 ? 'item' : 'items' }}
+              </span>
+            </span>
+
+            <span class="category-art">
+              <img
+                v-if="categoryImages[category.name]"
+                :src="categoryImages[category.name]"
+                alt=""
+                loading="lazy"
+                class="category-img"
+              >
+              <span v-else-if="isFirstLoad" class="sk-skel category-skel" aria-hidden="true" />
+              <v-icon v-else :icon="category.icon" class="category-fallback" />
+            </span>
+
+            <span class="category-go" aria-hidden="true">
+              <v-icon icon="arrow-up-right" size="16" />
             </span>
           </button>
         </div>
@@ -179,135 +163,133 @@
     </section>
 
     <!-- ========================================
-         PRODUCTS (search, category filter + sort)
+         PRODUCTS (category tabs, search + sort)
     ========================================= -->
-    <v-container id="products" class="pb-12">
-      <div class="section-head">
-        <div>
+    <section id="products" class="products">
+      <v-container class="pb-8 pb-md-12">
+        <div class="section-head section-head-center">
           <div class="sk-eyebrow">Catalog</div>
           <h2 class="sk-section-title">Our Products</h2>
         </div>
-        <span v-if="isFirstLoad" class="sk-skel" style="width: 110px; height: 14px" />
-        <span v-else-if="!error" class="text-body-2 text-medium-emphasis">
-          Showing {{ filteredProducts.length }} of {{ products.length }}
-        </span>
-      </div>
 
-      <form class="search-pill catalog-search" role="search" @submit.prevent="scrollToProducts">
-        <v-icon icon="search" class="search-icon ml-2" />
-        <input
-          v-model="search"
-          type="search"
-          class="search-input"
-          placeholder="Search by name, description, or category"
-          aria-label="Search products"
-        >
-        <v-btn type="submit" color="primary" rounded="pill" :icon="xs" class="flex-shrink-0" aria-label="Search">
-          <v-icon v-if="xs" icon="arrow-right" />
-          <span v-else>Search</span>
-        </v-btn>
-      </form>
+        <!-- Category tabs (Panto-style pill), scrollable on small screens -->
+        <div class="tabs-wrap">
+          <div class="tabs sk-glass sk-scroll-x" role="group" aria-label="Filter by category">
+            <button
+              v-for="option in categoryOptions"
+              :key="option"
+              type="button"
+              class="tab"
+              :class="{ 'tab-active': selectedCategory === option }"
+              :aria-pressed="selectedCategory === option"
+              @click="setCategory(option)"
+            >
+              {{ option === ALL_CATEGORIES ? 'All' : option }}
+            </button>
+          </div>
+        </div>
 
-      <div class="toolbar sk-surface mb-4">
-        <v-row dense>
-          <v-col cols="6">
-            <v-select
-              v-model="selectedCategory"
-              :items="categoryOptions"
-              label="Category"
-              :prepend-inner-icon="xs ? undefined : 'shapes'"
-              variant="solo-filled"
-              flat
-              density="comfortable"
-              hide-details
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-select
-              v-model="sortBy"
-              :items="sortOptions"
-              label="Sort by"
-              :prepend-inner-icon="xs ? undefined : 'arrow-up-down'"
-              variant="solo-filled"
-              flat
-              density="comfortable"
-              hide-details
-            />
+        <div class="toolbar">
+          <form class="toolbar-search" role="search" @submit.prevent>
+            <v-icon icon="search" size="20" class="toolbar-search-icon" />
+            <input
+              v-model="search"
+              type="search"
+              class="toolbar-search-input"
+              placeholder="Search by name, description, or category"
+              aria-label="Search products"
+            >
+          </form>
+          <v-select
+            v-model="sortBy"
+            :items="sortOptions"
+            label="Sort by"
+            :prepend-inner-icon="xs ? undefined : 'arrow-up-down'"
+            variant="solo"
+            flat
+            density="comfortable"
+            hide-details
+            class="toolbar-sort"
+          />
+        </div>
+
+        <div class="d-flex flex-wrap align-center justify-space-between ga-2 mb-4">
+          <div v-if="(selectedCategory !== ALL_CATEGORIES || search) && !loading && !error" class="d-flex flex-wrap align-center ga-2">
+            <span class="text-body-2 text-medium-emphasis">Filters:</span>
+            <v-chip
+              v-if="selectedCategory !== ALL_CATEGORIES"
+              closable
+              size="small"
+              color="primary"
+              @click:close="clearCategory"
+            >
+              {{ selectedCategory }}
+            </v-chip>
+            <v-chip v-if="search" closable size="small" color="primary" @click:close="search = ''">
+              "{{ search }}"
+            </v-chip>
+            <v-btn size="small" variant="text" @click="clearFilters">Clear all</v-btn>
+          </div>
+          <span v-else />
+          <span v-if="isFirstLoad" class="sk-skel" style="width: 110px; height: 14px" />
+          <span v-else-if="!error" class="text-body-2 text-medium-emphasis">
+            Showing {{ filteredProducts.length }} of {{ products.length }}
+          </span>
+        </div>
+
+        <!-- LOADING: placeholders shaped like ProductCard -->
+        <v-row v-if="isFirstLoad" :dense="xs" aria-busy="true" aria-label="Loading products">
+          <v-col v-for="n in 8" :key="n" cols="6" md="4" lg="3">
+            <ProductCardSkeleton />
           </v-col>
         </v-row>
-      </div>
 
-      <div v-if="(selectedCategory !== ALL_CATEGORIES || search) && !loading && !error" class="d-flex flex-wrap align-center ga-2 mb-4">
-        <span class="text-body-2 text-medium-emphasis">Filters:</span>
-        <v-chip
-          v-if="selectedCategory !== ALL_CATEGORIES"
-          closable
-          size="small"
-          color="primary"
-          @click:close="clearCategory"
-        >
-          {{ selectedCategory }}
-        </v-chip>
-        <v-chip v-if="search" closable size="small" color="primary" @click:close="search = ''">
-          "{{ search }}"
-        </v-chip>
-        <v-btn size="small" variant="text" @click="clearFilters">Clear all</v-btn>
-      </div>
+        <!-- API ERROR -->
+        <div v-else-if="error" class="state-card sk-surface">
+          <v-avatar color="error" variant="tonal" size="72">
+            <v-icon icon="cloud-alert" size="36" />
+          </v-avatar>
+          <h3 class="mt-4">Could not load products</h3>
+          <p class="text-medium-emphasis mt-2">{{ error }}</p>
+          <v-btn color="primary" class="mt-5" prepend-icon="refresh-cw" :loading="loading" @click="loadProducts">
+            Try Again
+          </v-btn>
+        </div>
 
-      <!-- LOADING: placeholders shaped like ProductCard -->
-      <v-row v-if="isFirstLoad" :dense="xs" aria-busy="true" aria-label="Loading products">
-        <v-col v-for="n in 8" :key="n" cols="6" md="4" lg="3">
-          <ProductCardSkeleton />
-        </v-col>
-      </v-row>
+        <!-- EMPTY -->
+        <div v-else-if="!filteredProducts.length" class="state-card sk-surface">
+          <v-avatar color="primary" variant="tonal" size="72">
+            <v-icon icon="package-x" size="36" />
+          </v-avatar>
+          <h3 class="mt-4">No products found</h3>
+          <p class="text-medium-emphasis mt-2">
+            {{ products.length ? 'Try another search or category.' : 'There are no active products yet.' }}
+          </p>
+          <v-btn v-if="products.length" color="primary" variant="tonal" class="mt-5" @click="clearFilters">
+            Show All Products
+          </v-btn>
+          <v-btn v-else color="primary" variant="tonal" class="mt-5" to="/products">
+            Add Products
+          </v-btn>
+        </div>
 
-      <!-- API ERROR -->
-      <div v-else-if="error" class="state-card sk-surface">
-        <v-avatar color="error" variant="tonal" size="72">
-          <v-icon icon="cloud-alert" size="36" />
-        </v-avatar>
-        <h3 class="mt-4">Could not load products</h3>
-        <p class="text-medium-emphasis mt-2">{{ error }}</p>
-        <v-btn color="primary" class="mt-5" prepend-icon="refresh-cw" :loading="loading" @click="loadProducts">
-          Try Again
-        </v-btn>
-      </div>
-
-      <!-- EMPTY -->
-      <div v-else-if="!filteredProducts.length" class="state-card sk-surface">
-        <v-avatar color="grey" variant="tonal" size="72">
-          <v-icon icon="package-x" size="36" />
-        </v-avatar>
-        <h3 class="mt-4">No products found</h3>
-        <p class="text-medium-emphasis mt-2">
-          {{ products.length ? 'Try another search or category.' : 'There are no active products yet.' }}
-        </p>
-        <v-btn v-if="products.length" color="primary" variant="tonal" class="mt-5" @click="clearFilters">
-          Show All Products
-        </v-btn>
-        <v-btn v-else color="primary" variant="tonal" class="mt-5" to="/products">
-          Add Products
-        </v-btn>
-      </div>
-
-      <!-- PRODUCT GRID -->
-      <v-row v-else :dense="xs">
-        <v-col v-for="product in filteredProducts" :key="product.documentId" cols="6" md="4" lg="3">
-          <ProductCard :product="product" />
-        </v-col>
-      </v-row>
-    </v-container>
+        <!-- PRODUCT GRID -->
+        <v-row v-else :dense="xs">
+          <v-col v-for="product in filteredProducts" :key="product.documentId" cols="6" md="4" lg="3">
+            <ProductCard :product="product" />
+          </v-col>
+        </v-row>
+      </v-container>
+    </section>
 
     <!-- ========================================
-         PROMOTIONAL BANNERS (bento)
+         DEALS (bento in the three palette swatches)
     ========================================= -->
     <section id="deals">
-      <v-container class="pb-12">
-        <div class="section-head">
-          <div>
-            <div class="sk-eyebrow">Promos</div>
-            <h2 class="sk-section-title">Deals For You</h2>
-          </div>
+      <v-container class="pb-8 pb-md-12">
+        <div class="section-head section-head-center">
+          <div class="sk-eyebrow">Promos</div>
+          <h2 class="sk-section-title">Deals For You</h2>
         </div>
 
         <div class="promo-bento">
@@ -317,11 +299,9 @@
               <h3 class="promo-title">{{ promo.title }}</h3>
               <p class="promo-text">{{ promo.text }}</p>
               <v-btn
-                :color="promo.theme === 'dark' ? 'white' : 'primary'"
+                :color="promo.button"
                 variant="flat"
-                rounded="pill"
                 append-icon="arrow-right"
-                :class="promo.theme === 'dark' ? 'text-brand-900' : ''"
                 @click="selectCategory(promo.category)"
               >
                 Shop {{ promo.category }}
@@ -345,15 +325,17 @@
     <!-- ========================================
          NEWSLETTER
     ========================================= -->
-    <v-container class="pb-12">
+    <v-container class="pb-8 pb-md-12">
       <section class="newsletter">
+        <!-- The googly eyes from the MineKartt cart -->
+        <span class="newsletter-eyes" aria-hidden="true"><span /><span /></span>
         <div class="newsletter-orb" />
         <v-row align="center" class="position-relative">
           <v-col cols="12" md="6" class="text-center text-md-left">
             <div class="newsletter-eyebrow">Newsletter</div>
-            <h2 class="newsletter-title">Subscribe to our newsletter</h2>
+            <h2 class="newsletter-title">Get deals in your inbox</h2>
             <p class="newsletter-text mt-2">
-              Get updates on new products, exclusive deals, and promos straight to your inbox.
+              Updates on new products, exclusive deals, and promos straight to your inbox.
             </p>
           </v-col>
           <v-col cols="12" md="6">
@@ -369,7 +351,7 @@
                 :rules="emailRules"
                 class="flex-grow-1"
               />
-              <v-btn type="submit" size="large" color="white" class="newsletter-btn">Subscribe</v-btn>
+              <v-btn type="submit" size="large" color="meadow" variant="flat" class="newsletter-btn">Subscribe</v-btn>
             </v-form>
           </v-col>
         </v-row>
@@ -379,9 +361,27 @@
 </template>
 
 <script setup lang="ts">
-import { useDisplay } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 
-useHead({ title: 'ShopKart | Online Store' })
+useHead({ title: 'MineKartt | Online Store' })
+
+// Hero photo for each screen shape, first match wins (same order as <source> in the template)
+const heroSources = [
+  { media: '(orientation: portrait) and (max-width: 640px)', file: 'portrait-sm' },
+  { media: '(orientation: portrait)', file: 'portrait' },
+  { media: '(max-width: 1100px)', file: 'landscape-sm' },
+]
+const HERO_DEFAULT = 'landscape'
+const theme = useTheme()
+const heroSet = computed(() => (theme.global.current.value.dark ? 'dark' : 'mist'))
+const heroUrl = (set: string, file: string) => `/images/hero-${set}-${file}.jpg`
+
+// Once the page has loaded, fetch the other theme's photo for this screen in the background,
+// so switching light/dark swaps the hero instantly instead of waiting on a download.
+function preloadOtherHero() {
+  const file = heroSources.find((source) => window.matchMedia(source.media).matches)?.file ?? HERO_DEFAULT
+  new Image().src = heroUrl(heroSet.value === 'dark' ? 'mist' : 'dark', file)
+}
 
 const ALL_CATEGORIES = 'All Categories'
 
@@ -406,6 +406,7 @@ const selectedCategory = ref(getCategoryFromRoute())
 const sortBy = ref('newest')
 
 const categoryOptions = [ALL_CATEGORIES, ...SHOP_CATEGORIES.map((category) => category.name)]
+const popularCategories = ['Electronics', 'Fashion', 'Sports']
 
 const sortOptions = [
   { title: 'Newest', value: 'newest' },
@@ -415,16 +416,17 @@ const sortOptions = [
 ]
 
 const features = [
-  { title: 'Free Delivery', text: 'On every order', icon: 'truck' },
-  { title: 'Secure Checkout', text: 'COD, GCash, Maya', icon: 'shield-check' },
-  { title: 'Easy Returns', text: '7-day return policy', icon: 'rotate-ccw' },
-  { title: '24/7 Support', text: 'We are here to help', icon: 'headset' },
+  { title: 'Free Delivery', text: 'On every order, nationwide.', icon: 'truck', tone: 'teal' },
+  { title: 'Secure Checkout', text: 'Cash on Delivery, GCash, Maya, or bank transfer.', icon: 'shield-check', tone: 'meadow' },
+  { title: 'Easy Returns', text: 'Changed your mind? Return within 7 days.', icon: 'rotate-ccw', tone: 'meadow' },
+  { title: '24/7 Support', text: 'Real people, ready to help any time.', icon: 'headset', tone: 'teal' },
 ]
 
 const promos = [
   {
     category: 'Sports',
-    theme: 'dark',
+    theme: 'teal',
+    button: 'meadow',
     eyebrow: 'Limited time',
     title: 'Sports Season Sale',
     text: 'Gear up for your next game with our sports collection.',
@@ -432,7 +434,8 @@ const promos = [
   },
   {
     category: 'Beauty',
-    theme: 'mist',
+    theme: 'meadow',
+    button: 'brand-900',
     eyebrow: 'New collection',
     title: 'Glow Up Beauty Picks',
     text: 'Skincare and makeup favorites, delivered free.',
@@ -441,6 +444,7 @@ const promos = [
   {
     category: 'Electronics',
     theme: 'sky',
+    button: 'primary',
     eyebrow: 'Tech week',
     title: 'Upgrade Your Setup',
     text: 'Monitors, gadgets, and accessories for work and play.',
@@ -482,10 +486,7 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-// Up to 3 products with images for the hero showcase.
-const heroProducts = computed(() => products.value.filter((product) => product.image).slice(0, 3))
-
-// First product image in each category, used as the promo banner art.
+// First product image in each category, used by the category tiles and promo banners.
 const categoryImages = computed(() => {
   const images: Record<string, string> = {}
   for (const product of products.value) {
@@ -506,9 +507,16 @@ watch(() => route.query.category, () => {
   selectedCategory.value = getCategoryFromRoute()
 })
 
+// Category tiles, promos, and hero chips: pick a category (or unpick it) and jump to the grid.
 function selectCategory(category: string) {
   selectedCategory.value = selectedCategory.value === category ? ALL_CATEGORIES : category
   scrollToProducts()
+}
+
+// Tabs above the grid: the grid is already in view, so no scrolling.
+function setCategory(category: string) {
+  if (category === ALL_CATEGORIES) clearCategory()
+  else selectedCategory.value = category
 }
 
 function clearCategory() {
@@ -519,13 +527,6 @@ function clearCategory() {
 function clearFilters() {
   search.value = ''
   clearCategory()
-}
-
-// Hero tile click: search for that product and jump to the grid.
-function findProduct(product: Product) {
-  search.value = product.name
-  selectedCategory.value = ALL_CATEGORIES
-  scrollToProducts()
 }
 
 function scrollToProducts() {
@@ -552,6 +553,8 @@ async function subscribe() {
 onMounted(() => {
   loadProducts()
   if (route.hash) nextTick(() => document.querySelector(route.hash)?.scrollIntoView({ behavior: 'smooth' }))
+  if (document.readyState === 'complete') setTimeout(preloadOtherHero, 1500)
+  else window.addEventListener('load', () => setTimeout(preloadOtherHero, 1500), { once: true })
 })
 </script>
 
@@ -559,61 +562,104 @@ onMounted(() => {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
+  display: flex;
+  align-items: center;
   overflow: hidden;
-  /* Extend the gradient up behind the floating glass App Bar */
+  /* Runs up behind the floating glass App Bar */
   margin-top: calc(var(--v-layout-top, 84px) * -1);
   padding-top: var(--v-layout-top, 84px);
-  padding-bottom: 72px;
-  background: var(--sk-hero-bg);
+  height: 100vh;
+  height: 100svh;
+  min-height: 600px;
+  background: var(--sk-hero-wall); /* matches the photo's wall, so its faded edges blend in */
 }
 
-/* Fades the hero into the page background so there is no hard edge */
+.hero-photo {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Landscape screens: the products fill the right three quarters of the photo, so the photo
+   is anchored bottom-right at 76% width and its left and top edges fade into the wall.
+   That leaves the left side free for the copy, and the hero is as tall as the photo. */
+@media (orientation: landscape) {
+  .hero {
+    height: calc(76vw * 941 / 1672 + var(--v-layout-top, 84px));
+    max-height: 100vh;
+    max-height: 100svh;
+  }
+
+  .hero-photo {
+    inset: auto 0 0 auto;
+    width: 76%;
+    aspect-ratio: 1672 / 941;
+    -webkit-mask-image:
+      linear-gradient(90deg, transparent 0%, #000 24%),
+      linear-gradient(180deg, transparent 0%, #000 16%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(90deg, transparent 0%, #000 24%),
+      linear-gradient(180deg, transparent 0%, #000 16%);
+    mask-composite: intersect;
+  }
+}
+
+/* Narrower landscape screens (tablets on their side, small laptops): a smaller photo
+   and a narrower copy column, so the text does not run into the products */
+@media (orientation: landscape) and (max-width: 1144px) {
+  .hero-photo {
+    width: 68%;
+  }
+
+  .hero-copy {
+    max-width: 470px;
+  }
+
+  .hero-subtitle {
+    max-width: 400px;
+  }
+}
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--sk-hero-scrim);
+  pointer-events: none;
+}
+
+/* Fades the photo into the page so there is no hard edge */
 .hero::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 140px;
+  height: 90px;
   background: linear-gradient(180deg, transparent, var(--sk-bg));
   pointer-events: none;
-}
-
-.hero-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(2px);
-  pointer-events: none;
-}
-
-.hero-orb-1 {
-  width: 14px;
-  height: 14px;
-  top: 22%;
-  left: 48%;
-  background: var(--sk-brand-700);
-  opacity: 0.5;
-}
-
-.hero-orb-2 {
-  width: 9px;
-  height: 9px;
-  top: 70%;
-  right: 6%;
-  background: var(--sk-brand-500);
-  opacity: 0.5;
 }
 
 .hero-inner {
   position: relative;
   z-index: 1;
-  padding-top: 40px;
-  padding-bottom: 16px;
+  padding-bottom: 48px;
+}
+
+.hero-copy {
+  max-width: 540px;
 }
 
 .hero-chip {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 700;
@@ -626,192 +672,73 @@ onMounted(() => {
   backdrop-filter: var(--sk-glass-blur);
 }
 
+.hero-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sk-meadow-500);
+  box-shadow: 0 0 0 3px rgba(var(--sk-meadow-500-rgb), 0.3);
+}
+
 .hero-title {
-  font-size: clamp(2.4rem, 6vw, 4rem);
-  font-weight: 800;
+  margin-top: 18px;
+  font-family: var(--sk-font-display);
+  font-size: clamp(2.5rem, 5.4vw, 4.4rem);
+  font-weight: 600;
   line-height: 1.02;
-  letter-spacing: -0.035em;
-  text-transform: uppercase;
-  color: var(--sk-ink);
+  letter-spacing: -0.02em;
+  color: var(--sk-hero-ink);
+}
+
+/* A lighter teal than the first line, so "in one Kartt." still reads as the accent
+   (4.2:1 on the cream wall; large text needs 3:1) */
+.hero-title-accent {
+  color: var(--sk-brand-500);
+  /* Shiny Text colors: rests on the accent color, the sweep is a paler teal */
+  --shine-base: var(--sk-brand-500);
+  --shine-light: #8ed3e6;
+}
+
+html[data-theme='dark'] .hero-title-accent {
+  color: var(--sk-meadow-500);
+  --shine-base: var(--sk-meadow-500);
+  --shine-light: #ffffff;
 }
 
 .hero-subtitle {
+  margin-top: 16px;
+  max-width: 440px;
   font-size: 1.075rem;
+  font-weight: 500;
   line-height: 1.6;
-  color: var(--sk-ink-subtle);
+  color: var(--sk-hero-copy);
+}
+
+/* Search pill (glass) with the meadow button, as in the Panto reference */
+.hero-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   max-width: 480px;
+  margin-top: 28px;
+  padding: 6px 6px 6px 16px;
+  background: var(--sk-glass-strong);
+  border: 1px solid var(--sk-glass-border);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--sk-glass-edge), 0 18px 40px -18px var(--sk-shadow-soft);
+  -webkit-backdrop-filter: var(--sk-glass-blur);
+  backdrop-filter: var(--sk-glass-blur);
 }
 
-.hero-cta {
-  box-shadow: 0 12px 24px -10px rgba(var(--sk-brand-800-rgb), 0.7);
+.hero-search:focus-within {
+  box-shadow: 0 0 0 2px rgba(var(--sk-brand-500-rgb), 0.55), 0 18px 40px -18px var(--sk-shadow-soft);
 }
 
-.stat-value {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--sk-ink);
-}
-
-.stat-label {
-  font-size: 13px;
+.hero-search-icon {
   color: var(--sk-muted);
 }
 
-/* Bento showcase */
-.hero-bento {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
-  height: 420px;
-}
-
-.hero-tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 14px;
-  border-radius: var(--sk-radius-lg);
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hero-tile:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0 0 1px var(--sk-glass-edge), var(--sk-glass-sheen), var(--sk-shadow-lg);
-}
-
-.hero-tile:focus-visible {
-  outline: 3px solid rgb(var(--v-theme-primary));
-  outline-offset: 2px;
-}
-
-.hero-tile-main {
-  grid-row: span 2;
-}
-
-.tile-img {
-  --sk-img-bg: var(--sk-img-tile);
-  flex: 1 1 auto;
-  min-height: 0;
-  border-radius: 18px;
-}
-
-.tile-img :deep(img) {
-  object-fit: contain !important;
-  padding: 6px;
-}
-
-.tile-badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 1;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgb(var(--v-theme-on-primary));
-  background: rgb(var(--v-theme-primary));
-  border-radius: 999px;
-}
-
-.tile-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: var(--sk-glass-strong);
-  border-radius: 12px;
-}
-
-.tile-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--sk-ink);
-  min-width: 0;
-}
-
-.tile-price {
-  flex-shrink: 0;
-  font-size: 13px;
-  font-weight: 800;
-  color: rgb(var(--v-theme-primary));
-}
-
-.hero-tile-side .tile-label {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  padding: 6px 10px;
-}
-
-.hero-tile-side .tile-name {
-  max-width: 100%;
-}
-
-/* Hero skeleton tiles */
-.hero-tile-skel {
-  pointer-events: none;
-}
-
-.tile-img-skel {
-  flex: 1 1 auto;
-  min-height: 0;
-  border-radius: 18px;
-}
-
-.tile-badge-skel {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 1;
-  width: 78px;
-  height: 22px;
-}
-
-.hero-tile-side .tile-label > .sk-skel {
-  margin: 3px 0;
-}
-
-.stat-skel {
-  width: 32px;
-  height: 1.4rem;
-  margin: 3px 0;
-}
-
-.promo-skel {
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-}
-
-/* ---------- Search ---------- */
-.search-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 8px 8px 8px 14px;
-  background: var(--sk-surface);
-  border: 1px solid var(--sk-border);
-  border-radius: 999px;
-  box-shadow: 0 18px 40px -18px var(--sk-shadow-soft);
-}
-
-/* Products search: centered under the section head, with room before the filters */
-.catalog-search {
-  margin-top: 8px;
-  margin-bottom: 28px;
-}
-
-.search-input {
+.hero-search-input {
   flex: 1 1 auto;
   min-width: 0;
   height: 44px;
@@ -822,131 +749,375 @@ onMounted(() => {
   outline: none;
 }
 
-.search-input::placeholder {
+.hero-search-input::placeholder {
   color: var(--sk-placeholder);
 }
 
-.search-icon {
-  color: var(--sk-muted);
-}
-
-/* ---------- Features ---------- */
-.features {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: var(--sk-surface);
-  border: 1px solid var(--sk-border);
-  border-radius: var(--sk-radius);
-}
-
-.feature-icon {
-  display: inline-flex;
+.hero-search-btn {
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--sk-accent-ink);
-  background: var(--sk-selected);
-  border-radius: 14px;
+  height: 44px !important;
+  padding: 0 22px !important;
 }
 
-.feature-title {
-  font-size: 14px;
-  font-weight: 700;
+.hero-search-btn.v-btn--icon {
+  width: 44px !important;
+  padding: 0 !important;
 }
 
-.feature-text {
-  font-size: 12px;
-  color: var(--sk-muted);
-}
-
-.min-w-0 {
-  min-width: 0;
-}
-
-/* ---------- Category ticker (inside BitsLogoLoop) ---------- */
-.ticker-chip {
-  display: inline-flex;
+.hero-popular {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  height: 40px;
-  padding: 0 8px 0 14px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--sk-ink);
-  white-space: nowrap;
-  background: var(--sk-surface);
-  border: 1px solid var(--sk-border);
+  margin-top: 16px;
+}
+
+/* Solid teal tag: plain text here sat straight on the photo and got lost over busy
+   parts (the plant leaves), so give it a backing like the chips beside it. */
+.hero-popular-label {
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  background: var(--sk-brand-700);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 999px;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
+  box-shadow: 0 6px 16px -8px rgba(var(--sk-brand-700-rgb), 0.8);
 }
 
-.ticker-chip:hover {
-  border-color: var(--sk-brand-300);
+.hero-popular-chip {
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sk-accent-ink);
+  background: var(--sk-glass-bg);
+  border: 1px solid var(--sk-glass-border);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--sk-glass-edge);
+  -webkit-backdrop-filter: var(--sk-glass-blur);
+  backdrop-filter: var(--sk-glass-blur);
+  transition: background-color var(--sk-dur-fast) var(--sk-ease), color var(--sk-dur-fast) var(--sk-ease);
 }
 
-.ticker-chip:focus-visible {
+.hero-popular-chip:hover {
+  color: var(--sk-brand-900);
+  background: var(--sk-meadow-300);
+}
+
+.hero-popular-chip:focus-visible,
+.hero-scroll:focus-visible {
   outline: 2px solid var(--sk-brand-700);
   outline-offset: 2px;
 }
 
-.ticker-chip-active {
-  background: var(--sk-selected);
-  border-color: var(--sk-brand-500);
+.hero-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--sk-brand-900);
+  background: var(--sk-glass-strong);
+  border: 1px solid var(--sk-glass-border);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--sk-glass-edge), var(--sk-shadow);
+  transform: translateX(-50%);
 }
 
-.ticker-count {
-  min-width: 24px;
-  padding: 2px 7px;
-  font-size: 12px;
+html[data-theme='dark'] .hero-scroll {
+  color: var(--sk-ink);
+}
+
+/* Portrait screens (phones, tablets held upright): the portrait photo fills the hero and
+   the copy sits in its exact middle, centered both ways (as in the Panto reference). */
+@media (orientation: portrait) {
+  /* One screen tall; grows only if the copy ever needs more room (very short screens) */
+  .hero {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .hero-photo img {
+    object-position: 50% 100%;
+  }
+
+  /* A soft oval of wall color (deep teal in dark mode) behind the copy, so the text stays
+     readable where the middle of the photo meets the top of the products */
+  .hero-scrim {
+    background: var(--sk-hero-scrim-portrait);
+  }
+
+  /* The hero's top padding clears the App Bar; the same padding at the bottom puts the
+     center of the copy at the center of the photo, not just of the space under the bar. */
+  .hero-inner {
+    padding-top: 16px;
+    padding-bottom: calc(var(--v-layout-top, 84px) + 16px);
+  }
+
+  .hero-copy {
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* "in one Kartt." always gets its own line, so the two centered lines stay even
+     instead of leaving "in" hanging at the end of the first line */
+  .hero-title-accent {
+    display: block;
+  }
+
+  .hero-subtitle {
+    margin-left: auto;
+    margin-right: auto;
+    text-wrap: balance;
+  }
+
+  .hero-search {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-popular {
+    justify-content: center;
+  }
+
+  /* Products fill the bottom of the photo; the cue would sit on them */
+  .hero-scroll {
+    display: none;
+  }
+}
+
+/* Short landscape screens (phones turned sideways): keep the copy compact */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hero {
+    min-height: 460px;
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    display: none;
+  }
+
+  .hero-search {
+    margin-top: 18px;
+  }
+
+  .hero-scroll {
+    display: none;
+  }
+}
+
+/* ---------- Why MineKartt (bento) ---------- */
+.why-bento {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(180px, auto);
+  gap: 16px;
+}
+
+.why-intro {
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 32px;
+  color: #ffffff;
+  border-radius: var(--sk-radius-lg);
+  background:
+    radial-gradient(circle at 85% 90%, rgba(var(--sk-brand-500-rgb), 0.55), transparent 55%),
+    linear-gradient(160deg, var(--sk-brand-800) 0%, var(--sk-brand-900) 100%);
+}
+
+.why-eyebrow {
+  color: var(--sk-meadow-500);
+}
+
+.why-title {
+  margin-top: 6px;
+  font-family: var(--sk-font-display);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.why-text {
+  margin-top: 12px;
+  margin-bottom: 20px; /* minimum gap above the button, which is pushed to the bottom */
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--sk-brand-200);
+}
+
+.why-intro .v-btn {
+  margin-top: auto !important;
+}
+
+.why-tile {
+  padding: 24px;
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
+  border-radius: var(--sk-radius-lg);
+  transition: transform var(--sk-dur) var(--sk-ease), box-shadow var(--sk-dur) var(--sk-ease);
+}
+
+.why-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sk-shadow);
+}
+
+.why-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.why-icon-teal {
+  color: var(--sk-brand-800);
+  background: var(--sk-brand-50);
+}
+
+.why-icon-meadow {
+  color: var(--sk-meadow-900);
+  background: var(--sk-meadow-100);
+}
+
+html[data-theme='dark'] .why-icon-teal {
+  color: var(--sk-brand-200);
+  background: rgba(var(--sk-brand-500-rgb), 0.2);
+}
+
+html[data-theme='dark'] .why-icon-meadow {
+  color: var(--sk-meadow-300);
+  background: rgba(var(--sk-meadow-500-rgb), 0.16);
+}
+
+.why-tile-title {
+  margin-top: 16px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--sk-accent-ink);
-  text-align: center;
-  background: var(--sk-tile);
-  border-radius: 999px;
+  color: var(--sk-ink);
+}
+
+.why-tile-text {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--sk-muted);
+}
+
+/* Stats tile: meadow swatch with deep teal text */
+.why-stats {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 12px;
+  padding: 24px 28px;
+  color: var(--sk-brand-900);
+  border-radius: var(--sk-radius-lg);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.45), transparent 50%),
+    var(--sk-meadow-500);
+}
+
+.why-stat-value {
+  font-family: var(--sk-font-display);
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.why-stat-label {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sk-meadow-900);
+}
+
+.stat-skel {
+  --sk-skel-base: rgba(var(--sk-brand-900-rgb), 0.14);
+  width: 48px;
+  height: 2.2rem;
+  margin: 4px 0;
 }
 
 /* ---------- Section header ---------- */
+/* Section rhythm: 64px between sections on desktop, 48px on phones (container padding),
+   4px from the eyebrow to the title, 24px (20px on phones) from the title to the content */
 .section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-/* ---------- Categories (clay) ---------- */
-.category-row {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 16px;
-  padding: 6px 4px 18px;
-  margin: -6px -4px 0;
-}
-
-.category-tile {
-  display: flex;
+.section-head-center {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 20px 10px 16px;
-  border-radius: 24px;
+  text-align: center;
+}
+
+.section-head-center .sk-section-title {
+  font-family: var(--sk-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Categories (bento of clay tiles) ---------- */
+.category-bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 168px;
+  gap: 16px;
+}
+
+/* Electronics is the big tile; Home & Living and Toys stretch across the last row */
+.category-tile-0 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.category-tile-5,
+.category-tile-6 {
+  grid-column: span 2;
+}
+
+.category-tile {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 18px;
+  text-align: left;
+  border-radius: var(--sk-radius-lg);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform var(--sk-dur) var(--sk-ease), box-shadow var(--sk-dur) var(--sk-ease);
 }
 
 .category-tile:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 2px rgba(var(--sk-brand-900-rgb), 0.05),
+    0 10px 20px -12px var(--sk-shadow-soft),
+    inset 0 -2px 5px var(--sk-clay-inset),
+    inset 0 2px 4px var(--sk-clay-highlight);
 }
 
 .category-tile:focus-visible {
@@ -954,37 +1125,214 @@ onMounted(() => {
   outline-offset: 2px;
 }
 
-.category-icon {
-  margin-bottom: 8px;
-  box-shadow: inset 0 2px 4px var(--sk-clay-highlight);
-}
-
-.category-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--sk-ink);
-  text-align: center;
-}
-
-.category-count {
-  font-size: 12px;
-  color: var(--sk-muted);
-}
-
 .category-active {
   border-color: rgb(var(--v-theme-primary));
   box-shadow:
     0 0 0 2px rgb(var(--v-theme-primary)),
-    0 14px 28px -14px rgba(var(--sk-brand-800-rgb), 0.5);
+    0 8px 18px -12px rgba(var(--sk-brand-700-rgb), 0.45);
 }
 
-/* ---------- Toolbar + states ---------- */
+.category-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.category-icon {
+  margin-bottom: auto;
+  box-shadow: inset 0 2px 4px var(--sk-clay-highlight);
+}
+
+.category-name {
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--sk-ink);
+}
+
+.category-count {
+  font-size: 12.5px;
+  color: var(--sk-muted);
+}
+
+.category-art {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46%;
+  height: 72%;
+}
+
+.category-tile-0 .category-art {
+  width: 62%;
+  height: 74%;
+}
+
+.category-tile-0 .category-name {
+  font-family: var(--sk-font-display);
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  font-weight: 600;
+}
+
+.category-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Blends white product photos into the tile */
+  mix-blend-mode: multiply;
+  transition: transform var(--sk-dur-slow) var(--sk-ease);
+}
+
+html[data-theme='dark'] .category-img {
+  mix-blend-mode: normal;
+  border-radius: 16px;
+  background: var(--sk-img-tile);
+  padding: 6px;
+}
+
+.category-tile:hover .category-img {
+  transform: scale(1.06) rotate(-2deg);
+}
+
+.category-skel {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+}
+
+.category-fallback {
+  font-size: 56px !important;
+  opacity: 0.18;
+}
+
+.category-go {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--sk-brand-900);
+  background: var(--sk-meadow-500);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity var(--sk-dur) var(--sk-ease), transform var(--sk-dur) var(--sk-ease);
+}
+
+.category-tile:hover .category-go,
+.category-tile:focus-visible .category-go,
+.category-active .category-go {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Products ---------- */
+.tabs-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 999px;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--sk-ink-soft);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  transition: background-color var(--sk-dur-fast) var(--sk-ease), color var(--sk-dur-fast) var(--sk-ease);
+}
+
+.tab:hover {
+  color: var(--sk-accent-ink);
+  background: var(--sk-hover);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--sk-brand-700);
+  outline-offset: -2px;
+}
+
+.tab-active,
+.tab-active:hover {
+  color: #ffffff;
+  background: rgb(var(--v-theme-primary));
+  box-shadow: 0 6px 14px -8px rgba(var(--sk-brand-700-rgb), 0.9);
+}
+
+html[data-theme='dark'] .tab-active,
+html[data-theme='dark'] .tab-active:hover {
+  color: rgb(var(--v-theme-on-primary));
+}
+
 .toolbar {
-  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.toolbar :deep(.v-field) {
-  border-radius: 12px;
+.toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 16px;
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
+  border-radius: 999px;
+  transition: border-color var(--sk-dur-fast) var(--sk-ease), box-shadow var(--sk-dur-fast) var(--sk-ease);
+}
+
+.toolbar-search:focus-within {
+  border-color: var(--sk-brand-500);
+  box-shadow: 0 0 0 3px rgba(var(--sk-brand-500-rgb), 0.2);
+}
+
+.toolbar-search-icon {
+  color: var(--sk-muted);
+}
+
+.toolbar-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 46px;
+  font-size: 14.5px;
+  color: var(--sk-ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.toolbar-search-input::placeholder {
+  color: var(--sk-placeholder);
+}
+
+.toolbar-sort :deep(.v-field) {
+  border-radius: 999px;
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
 }
 
 .state-card {
@@ -996,7 +1344,7 @@ onMounted(() => {
 .promo-bento {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
-  grid-template-rows: repeat(2, minmax(190px, auto));
+  grid-template-rows: repeat(2, minmax(200px, auto));
   gap: 16px;
 }
 
@@ -1029,26 +1377,26 @@ onMounted(() => {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .promo-title {
   margin-top: 6px;
-  font-size: 1.35rem;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-family: var(--sk-font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .promo:first-child .promo-title {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
 }
 
 .promo-text {
   margin: 8px 0 18px;
   font-size: 14px;
   line-height: 1.5;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .promo-art {
@@ -1073,12 +1421,12 @@ onMounted(() => {
   border-radius: 16px;
 }
 
-.promo-dark .promo-img {
+.promo-teal .promo-img {
   --sk-img-bg: #ffffff;
 }
 
-.promo-mist .promo-img {
-  --sk-img-bg: var(--sk-promo-mist-img);
+.promo-meadow .promo-img {
+  --sk-img-bg: var(--sk-promo-meadow-img);
 }
 
 .promo-sky .promo-img {
@@ -1094,33 +1442,53 @@ onMounted(() => {
   opacity: 0.25;
 }
 
-.promo-dark {
+/* Teal Waters swatch */
+.promo-teal {
   color: #ffffff;
   background:
-    radial-gradient(circle at 80% 85%, rgba(var(--sk-brand-700-rgb), 0.45), transparent 50%),
-    linear-gradient(150deg, #172a45 0%, var(--sk-brand-900) 100%);
+    radial-gradient(circle at 80% 85%, rgba(255, 255, 255, 0.22), transparent 50%),
+    linear-gradient(150deg, #2c5b6b 0%, var(--sk-brand-700) 60%, var(--sk-brand-800) 100%);
 }
 
-.promo-dark .promo-art {
+.promo-teal .promo-eyebrow {
+  color: var(--sk-meadow-300);
+  opacity: 1;
+}
+
+.promo-teal .promo-art {
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   padding: 12px;
 }
 
-.promo-mist {
-  color: var(--sk-promo-ink);
-  background: var(--sk-promo-mist);
+/* Spring Meadow swatch */
+.promo-meadow {
+  color: var(--sk-brand-900);
+  background: var(--sk-promo-meadow);
 }
 
+/* Glacial Sky swatch */
 .promo-sky {
   color: var(--sk-promo-ink);
   background: var(--sk-promo-sky);
+  border: 1px solid var(--sk-border);
 }
 
-/* Dark mode: light cards become navy, so give them an edge against the page */
+html[data-theme='dark'] .promo-teal {
+  background:
+    radial-gradient(circle at 80% 85%, rgba(var(--sk-brand-500-rgb), 0.4), transparent 50%),
+    linear-gradient(150deg, var(--sk-brand-800) 0%, var(--sk-brand-900) 100%);
+}
+
+html[data-theme='dark'] .promo-meadow {
+  color: var(--sk-meadow-100);
+}
+
+/* Dark mode: give the dark cards an edge against the page */
 html[data-theme='dark'] .promo,
-html[data-theme='dark'] .newsletter {
+html[data-theme='dark'] .newsletter,
+html[data-theme='dark'] .why-intro {
   border: 1px solid var(--sk-border);
 }
 
@@ -1128,9 +1496,11 @@ html[data-theme='dark'] .newsletter {
 .newsletter {
   position: relative;
   overflow: hidden;
-  padding: 40px;
+  padding: 48px 40px 40px;
   border-radius: var(--sk-radius-lg);
-  background: linear-gradient(135deg, var(--sk-brand-900) 0%, var(--sk-brand-800) 60%, var(--sk-brand-700) 100%);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(var(--sk-meadow-500-rgb), 0.28), transparent 40%),
+    linear-gradient(135deg, var(--sk-brand-900) 0%, var(--sk-brand-800) 55%, var(--sk-brand-700) 100%);
 }
 
 .newsletter-orb {
@@ -1140,8 +1510,37 @@ html[data-theme='dark'] .newsletter {
   width: 260px;
   height: 260px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Two outlined eyes peeking over the card's top edge, like the cart in the logo */
+.newsletter-eyes {
+  position: absolute;
+  top: 14px;
+  right: 72px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+}
+
+.newsletter-eyes span {
+  position: relative;
+  width: 26px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50% 50% 46% 46%;
+}
+
+.newsletter-eyes span::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  width: 8px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f7f9e1; /* Morning Mist */
 }
 
 .newsletter-eyebrow {
@@ -1149,14 +1548,14 @@ html[data-theme='dark'] .newsletter {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--sk-brand-200);
+  color: var(--sk-meadow-500);
 }
 
 .newsletter-title {
   margin-top: 4px;
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--sk-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 600;
   color: #ffffff;
 }
 
@@ -1165,37 +1564,67 @@ html[data-theme='dark'] .newsletter {
 }
 
 .newsletter-form :deep(.v-field) {
-  border-radius: 14px;
+  border-radius: 999px;
 }
 
 .newsletter-btn {
   height: 48px !important;
-  color: var(--sk-brand-900) !important;
 }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1144px) {
-  .category-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .why-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: auto;
+  }
+
+  .why-intro {
+    grid-row: auto;
+    grid-column: span 2;
+  }
+
+  .category-bento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* 3 columns: big tile spans 2x2, the rest fill in single cells */
+  .category-tile-5,
+  .category-tile-6 {
+    grid-column: auto;
+  }
+
+  .category-tile-6 {
+    grid-column: span 3;
   }
 }
 
 @media (max-width: 839px) {
-  .hero {
-    padding-bottom: 64px;
+  .why-intro {
+    padding: 26px;
   }
 
-  .hero-inner {
-    padding-top: 20px;
-  }
-
-  .hero-bento {
-    height: 340px;
-    margin-top: 8px;
-  }
-
-  .features {
+  .category-bento {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(150px, auto);
+  }
+
+  .category-tile-0 {
+    grid-row: span 1;
+    min-height: 190px;
+  }
+
+  /* One row tall here, so the photo keeps to the right half, clear of the name */
+  .category-tile-0 .category-art {
+    width: 50%;
+    height: 82%;
+  }
+
+  .category-tile-6 {
+    grid-column: auto;
+  }
+
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr) 190px;
   }
 
   .promo-bento {
@@ -1228,73 +1657,101 @@ html[data-theme='dark'] .newsletter {
   }
 
   .newsletter {
-    padding: 32px 24px;
+    padding: 48px 24px 32px;
   }
 }
 
 @media (max-width: 599px) {
-  .hero-stats {
-    gap: 20px !important;
+  .section-head {
+    margin-bottom: 20px;
   }
 
-  .hero-bento {
-    height: 300px;
-    gap: 10px;
+  .hero-title {
+    font-size: clamp(2.1rem, 9.5vw, 2.6rem);
   }
 
-  .hero-tile {
-    padding: 10px;
-    border-radius: 20px;
+  .hero-subtitle {
+    font-size: 0.98rem;
   }
 
-  .hero-tile-side .tile-label {
-    padding: 4px 8px;
+  .hero-search {
+    margin-top: 20px;
+    padding: 5px 5px 5px 14px;
   }
 
-  .tile-name {
-    font-size: 12px;
-  }
-
-  .tile-price {
-    font-size: 12px;
-  }
-
-  .search-pill {
-    padding: 6px 6px 6px 10px;
-  }
-
-  .search-input {
+  .hero-search-input {
+    height: 42px;
     font-size: 14px;
   }
 
-  .features {
-    gap: 8px;
-  }
-
-  .feature {
-    padding: 10px;
+  .why-bento {
     gap: 10px;
   }
 
-  .feature-icon {
-    width: 38px;
-    height: 38px;
+  .why-tile {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .why-tile-title {
+    margin-top: 12px;
+    font-size: 14.5px;
+  }
+
+  .why-tile-text {
+    font-size: 12.5px;
+  }
+
+  .why-icon {
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
   }
 
-  /* Categories become a swipeable row on phones */
-  .category-row {
-    display: flex;
-    gap: 12px;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 16px;
-    margin: -6px -16px 0;
-    padding: 6px 16px 18px;
+  .why-stats {
+    padding: 20px 16px;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .why-stat-label {
+    font-size: 12px;
+  }
+
+  .category-bento {
+    gap: 10px;
+    grid-auto-rows: minmax(140px, auto);
   }
 
   .category-tile {
-    flex: 0 0 120px;
-    scroll-snap-align: start;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .category-name {
+    font-size: 13.5px;
+  }
+
+  .category-count {
+    font-size: 11.5px;
+  }
+
+  .category-art {
+    width: 50%;
+    height: 58%;
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .tabs-wrap {
+    justify-content: flex-start;
+    margin: 0 -16px 16px;
+    padding: 0 16px;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .promo-bento {
@@ -1317,13 +1774,17 @@ html[data-theme='dark'] .newsletter {
     height: 96px;
   }
 
-  .promo-dark .promo-art {
+  .promo-teal .promo-art {
     padding: 8px;
     border-radius: 18px;
   }
 
   .promo:first-child .promo-title {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
+  }
+
+  .newsletter-eyes {
+    right: 24px;
   }
 }
 </style>

@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
   overflow?: number // px the canvas extends past the wrapped element
   disabled?: boolean
 }>(), {
-  sparkColor: '#4d79a8',
+  sparkColor: '#5fa83a',
   sparkSize: 12,
   sparkRadius: 26,
   sparkCount: 10,

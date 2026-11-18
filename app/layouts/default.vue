@@ -23,7 +23,7 @@
           <ThemeToggle />
 
           <v-btn icon variant="text" size="small" class="nav-icon" aria-label="Open wishlist" @click="wishlist.drawerOpen.value = true">
-            <v-badge :content="wishlist.count.value" :model-value="wishlist.count.value > 0" color="pink" offset-x="-2" offset-y="-2">
+            <v-badge :content="wishlist.count.value" :model-value="wishlist.count.value > 0" color="rose" offset-x="-2" offset-y="-2">
               <v-icon icon="heart" size="22" />
             </v-badge>
           </v-btn>
@@ -70,7 +70,7 @@
 
       <!-- ===== FOOTER ===== -->
       <footer class="shop-footer">
-        <v-container class="pt-12 pb-8">
+        <v-container class="pt-10 pb-6">
           <v-row>
             <v-col cols="12" md="4">
               <BrandLogo small />
@@ -102,13 +102,13 @@
             <v-col cols="12" md="3">
               <div class="footer-title">Contact</div>
               <div class="footer-link"><v-icon icon="map-pin" size="16" class="mr-2" />Philippines</div>
-              <div class="footer-link"><v-icon icon="mail" size="16" class="mr-2" />support@shopkart.test</div>
+              <div class="footer-link"><v-icon icon="mail" size="16" class="mr-2" />support@minekartt.test</div>
               <div class="footer-link"><v-icon icon="phone" size="16" class="mr-2" />(02) 8000-0000</div>
             </v-col>
           </v-row>
 
           <div class="footer-bottom mt-8 pt-6 d-flex flex-column flex-sm-row justify-space-between ga-2">
-            <span>&copy; {{ year }} ShopKart. All rights reserved.</span>
+            <span>&copy; {{ year }} MineKartt. All rights reserved.</span>
             <span>Web Systems and Technologies Final Project</span>
           </div>
         </v-container>
@@ -160,6 +160,19 @@ onMounted(() => {
   border-radius: 20px;
 }
 
+/* Light mode: the see-through glass turned cream over the cream page and its wide, soft
+   shadow read as a smudge. A near-white card with a tight contact shadow plus one soft
+   drop shadow gives the bar a clear, even lift. */
+html:not([data-theme='dark']) .nav-pill {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(var(--sk-brand-900-rgb), 0.07);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(var(--sk-brand-900-rgb), 0.06),
+    0 2px 6px -1px rgba(var(--sk-brand-900-rgb), 0.06),
+    0 12px 28px -14px rgba(var(--sk-brand-900-rgb), 0.22);
+}
+
 .nav-link {
   position: relative;
   padding: 8px 14px;
@@ -168,7 +181,7 @@ onMounted(() => {
   color: var(--sk-ink-soft);
   text-decoration: none;
   border-radius: 10px;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color var(--sk-dur-fast) var(--sk-ease), color var(--sk-dur-fast) var(--sk-ease);
 }
 
 .nav-link:hover {
@@ -176,8 +189,12 @@ onMounted(() => {
   background: rgba(var(--v-theme-primary), 0.1);
 }
 
+/* v-btn clips its content (overflow: hidden) to keep the click ripple round, which also cut
+   off the top of the count badge. The ripple has its own clipping container, so let the
+   badge show past the button's edge. */
 .nav-icon {
   color: var(--sk-ink-soft);
+  overflow: visible;
 }
 
 .shop-main {
@@ -185,10 +202,20 @@ onMounted(() => {
   min-height: 100vh;
 }
 
+/* Light footer with a thin teal-to-meadow line along the top */
 .shop-footer {
-  background: var(--sk-surface);
-  border-top: 1px solid var(--sk-border);
-  margin-top: 24px;
+  position: relative;
+  background: var(--sk-tile);
+}
+
+.shop-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sk-brand-500) 0%, var(--sk-meadow-500) 100%);
 }
 
 .footer-text {
@@ -225,7 +252,7 @@ a.footer-link:hover {
   font-size: 12px;
   font-weight: 600;
   color: var(--sk-ink-soft);
-  background: var(--sk-tile);
+  background: var(--sk-surface);
   border: 1px solid var(--sk-border);
   border-radius: 8px;
 }

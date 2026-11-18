@@ -1,4 +1,4 @@
-// Lucide icons used by ShopKart, keyed by their Lucide name (https://lucide.dev/icons).
+// Lucide icons used by MineKartt, keyed by their Lucide name (https://lucide.dev/icons).
 // Vuetify resolves any plain icon string through this map, so templates write
 // <v-icon icon="shopping-bag" /> or <v-btn prepend-icon="search" />.
 // To use a new icon, import it here and add it to the map; only listed icons are bundled.
@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpDown,
+  ArrowUpRight,
   Backpack,
   Banknote,
   Calendar,
@@ -39,6 +40,7 @@ import {
   Heart,
   House,
   ImageOff,
+  LayoutGrid,
   Info,
   KeyRound,
   Landmark,
@@ -101,6 +103,7 @@ export const lucideIcons: Record<string, Component> = {
   'arrow-left': ArrowLeft,
   'arrow-right': ArrowRight,
   'arrow-up-down': ArrowUpDown,
+  'arrow-up-right': ArrowUpRight,
   backpack: Backpack,
   banknote: Banknote,
   check: Check,
@@ -116,6 +119,7 @@ export const lucideIcons: Record<string, Component> = {
   house: House,
   'image-off': ImageOff,
   'key-round': KeyRound,
+  'layout-grid': LayoutGrid,
   landmark: Landmark,
   lock: Lock,
   'log-out': LogOut,

@@ -26,7 +26,7 @@
 <script setup lang="ts">
 const {
   tag = 'div',
-  spotlightColor = 'rgba(110, 158, 204, 0.22)',
+  spotlightColor = 'rgba(61, 127, 146, 0.2)',
   strength = 0.6,
 } = defineProps<{
   tag?: string

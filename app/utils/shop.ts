@@ -19,14 +19,15 @@ export interface Product {
 }
 
 // Same categories as the Product Management form (pages/products.vue).
+// Icon colors alternate between the two palette accents: teal (primary) and meadow.
 export const SHOP_CATEGORIES = [
-  { name: 'Electronics', icon: 'laptop', color: 'blue' },
-  { name: 'Fashion', icon: 'shirt', color: 'pink' },
-  { name: 'Sports', icon: 'dumbbell', color: 'orange' },
-  { name: 'Bags', icon: 'backpack', color: 'brown' },
-  { name: 'Beauty', icon: 'sparkles', color: 'purple' },
-  { name: 'Home & Living', icon: 'sofa', color: 'teal' },
-  { name: 'Toys', icon: 'toy-brick', color: 'amber-darken-2' },
+  { name: 'Electronics', icon: 'laptop', color: 'primary' },
+  { name: 'Fashion', icon: 'shirt', color: 'meadow-700' },
+  { name: 'Sports', icon: 'dumbbell', color: 'primary' },
+  { name: 'Bags', icon: 'backpack', color: 'meadow-700' },
+  { name: 'Beauty', icon: 'sparkles', color: 'primary' },
+  { name: 'Home & Living', icon: 'sofa', color: 'meadow-700' },
+  { name: 'Toys', icon: 'toy-brick', color: 'primary' },
 ]
 
 // Must match PAYMENT_METHODS in the Strapi checkout controller.

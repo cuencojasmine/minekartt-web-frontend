@@ -1,6 +1,6 @@
 <!-- app/pages/checkout.vue — Checkout All -->
 <template>
-  <v-container class="py-8 checkout-page">
+  <v-container class="py-8">
     <v-btn to="/" variant="text" prepend-icon="arrow-left" class="mb-4 px-2">
       Continue Shopping
     </v-btn>
@@ -85,7 +85,7 @@
     <template v-else>
       <div class="sk-eyebrow">Checkout All</div>
       <h1 class="checkout-title mb-1">Checkout</h1>
-      <p class="text-medium-emphasis mb-6">Review your items and enter your delivery details.</p>
+      <p class="text-medium-emphasis mb-8">Review your items and enter your delivery details.</p>
 
       <v-row>
         <!-- CUSTOMER INFORMATION -->
@@ -249,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Checkout | ShopKart' })
+useHead({ title: 'Checkout | MineKartt' })
 
 const cart = useCart()
 const notify = useNotify()
@@ -367,10 +367,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.checkout-page {
-  max-width: 1200px;
-}
-
 .checkout-title {
   font-size: clamp(1.8rem, 4vw, 2.4rem);
   font-weight: 800;
@@ -397,7 +393,7 @@ onMounted(() => {
   cursor: pointer;
   border-radius: 14px !important;
   border-color: var(--sk-border) !important;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color var(--sk-dur-fast) var(--sk-ease), background-color var(--sk-dur-fast) var(--sk-ease);
 }
 
 .payment-active {

@@ -50,12 +50,13 @@
 
         <section class="login-card" aria-labelledby="login-title">
           <div class="login-icon">
-            <img src="/logo.png" alt="" width="34" height="34" />
+            <img src="/logo.png" alt="" width="34" height="34" class="login-logo--light" />
+            <img src="/logo-dark.png" alt="" width="34" height="34" class="login-logo--dark" />
           </div>
 
           <h1 id="login-title" class="login-title">Store Manager sign in</h1>
           <p class="login-subtitle">
-            Add, edit and remove ShopKart products. Only Store Manager accounts can sign in.
+            Add, edit and remove MineKartt products. Only Store Manager accounts can sign in.
           </p>
 
           <v-form ref="loginForm" class="login-form" @submit.prevent="signIn">
@@ -599,7 +600,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Product Management | ShopKart',
+  title: 'Product Management | MineKartt',
 })
 
 const { STRAPI_URL } = useStrapi()
@@ -1172,6 +1173,16 @@ onMounted(() => {
   border-radius: 9px;
 }
 
+/* Navy logo mark in dark mode */
+.login-icon .login-logo--dark,
+html[data-theme='dark'] .login-icon .login-logo--light {
+  display: none;
+}
+
+html[data-theme='dark'] .login-icon .login-logo--dark {
+  display: block;
+}
+
 .login-title {
   margin: 0;
   font-size: 22px;
@@ -1200,7 +1211,7 @@ onMounted(() => {
   background: var(--sk-login-field);
   border-radius: 10px;
   font-size: 14px;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color var(--sk-dur-fast) var(--sk-ease), box-shadow var(--sk-dur-fast) var(--sk-ease);
 }
 
 .login-field :deep(.v-field--focused) {
@@ -1444,7 +1455,7 @@ onMounted(() => {
   background: var(--sk-img-tile);
   border: 1.5px dashed var(--sk-brand-300);
   border-radius: 16px;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--sk-dur-fast) var(--sk-ease), background-color var(--sk-dur-fast) var(--sk-ease), box-shadow var(--sk-dur-fast) var(--sk-ease);
 }
 
 .pd-dropzone--filled {
@@ -1524,7 +1535,7 @@ onMounted(() => {
   border-radius: 999px;
   opacity: 0;
   transform: translate(-50%, 4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity var(--sk-dur-fast) var(--sk-ease), transform var(--sk-dur-fast) var(--sk-ease);
 }
 
 .pd-dropzone:hover .pd-dropzone-overlay,
