@@ -212,6 +212,14 @@ body {
   max-width: 100vw;
 }
 
+/* Vuetify 4 caps .v-container at 700px from 840px to 1144px wide, which leaves a third of a
+   1024px laptop / landscape tablet empty and squeezes the two-column checkout. Use the space. */
+@media (min-width: 840px) and (max-width: 1144.98px) {
+  .v-container:not(.v-container--fluid) {
+    max-width: calc(100% - 48px);
+  }
+}
+
 /* Page sections land below the fixed app bar (84px) with some breathing room when scrolled
    to with #hash links or scrollIntoView(). .why has no id but gets the same offset. */
 section[id],

@@ -306,7 +306,8 @@
                       variant="outlined"
                       density="compact"
                       hide-details="auto"
-                      :rules="[(value) => !!value || 'Product name is required']"
+                      :rules="nameRules"
+                      maxlength="100"
                     />
                   </div>
 
@@ -320,7 +321,9 @@
                       density="compact"
                       rows="3"
                       no-resize
-                      hide-details
+                      maxlength="2000"
+                      hide-details="auto"
+                      :rules="descriptionRules"
                     />
                   </div>
 
@@ -364,7 +367,8 @@
                       placeholder="Choose a category"
                       variant="outlined"
                       density="compact"
-                      hide-details
+                      hide-details="auto"
+                      :rules="categoryRules"
                     />
                   </div>
 
@@ -608,19 +612,39 @@ const categories = [
   'Toys',
 ]
 
+// Same limits as the Strapi product controller (minekartt-server/src/api/product/controllers/product.ts)
+const nameRules = [
+  (value) => !!String(value ?? '').trim() || 'Product name is required',
+  (value) => String(value ?? '').trim().length <= 100 || 'Use 100 characters or less',
+]
+
+const descriptionRules = [
+  (value) => String(value ?? '').length <= 2000 || 'Use 2000 characters or less',
+]
+
 const priceRules = [
-  (value) => value >= 0 || 'Price cannot be negative',
+  (value) => (value !== '' && value !== null && Number.isFinite(Number(value))) || 'Price is required',
+  (value) => Number(value) >= 0 || 'Price cannot be negative',
+  (value) => Number(value) <= 10000000 || 'Price is too high',
+  (value) => Math.abs(Math.round(Number(value) * 100) - Number(value) * 100) < 1e-6 || 'Use at most 2 decimal places',
 ]
 
 const stockRules = [
-  (value) => value >= 0 || 'Stock cannot be negative',
+  (value) => (value !== '' && value !== null && Number.isInteger(Number(value))) || 'Stock must be a whole number',
+  (value) => Number(value) >= 0 || 'Stock cannot be negative',
+  (value) => Number(value) <= 1000000 || 'Stock is too high',
+]
+
+const categoryRules = [
+  (value) => categories.includes(value) || 'Choose a category',
 ]
 
 const notify = useNotify()
 
-// Below 760px the table no longer fits, so products show as stacked cards.
+// Below 1000px the 7-column table (about 970px wide) no longer fits and Edit / Delete would
+// hide behind a sideways scroll, so phones and tablets get stacked cards instead.
 const { width: viewportWidth } = useDisplay()
-const isPhone = computed(() => viewportWidth.value < 760)
+const isPhone = computed(() => viewportWidth.value < 1000)
 
 // ===== 12. Search filter =====
 const filteredProducts = computed(() => {
@@ -730,7 +754,7 @@ async function createProduct() {
     method: 'POST',
     body: {
       data: {
-        name: form.name,
+        name: form.name.trim(),
         description: form.description,
         price: Number(form.price),
         stock: Number(form.stock),
@@ -741,7 +765,16 @@ async function createProduct() {
   })
 
   if (selectedFile.value && response.data) {
-    await uploadProductImage(response.data.id)
+    try {
+      await uploadProductImage(response.data.id)
+    } catch (error) {
+      // The product exists now; switch the dialog to edit mode so pressing
+      // Save again retries the image instead of creating a duplicate product.
+      selectedProduct.value = response.data
+      isEditing.value = true
+      getProducts()
+      throw new Error(`Product saved, but the image could not be uploaded: ${getErrorMessage(error)}`)
+    }
   }
 
   showSnackbar('Product created successfully.', 'success')
@@ -775,7 +808,7 @@ async function updateProduct() {
       method: 'PUT',
       body: {
         data: {
-          name: form.name,
+          name: form.name.trim(),
           description: form.description,
           price: Number(form.price),
           stock: Number(form.stock),
@@ -873,16 +906,18 @@ function showSnackbar(message, color = 'success') {
 }
 
 function getErrorMessage(error) {
+  // Server messages (validation, "Too many requests", ...) are written for people, so show them first.
+  const serverMessage = error?.data?.error?.message
+  if (serverMessage && serverMessage !== 'Forbidden') return serverMessage
+
   if (error?.statusCode === 403) {
     return 'Strapi refused this action. Check the Public role permissions in the Strapi admin panel.'
   }
 
-  return (
-    error?.data?.error?.message ||
-    error?.data?.message ||
-    error?.message ||
-    'Something went wrong.'
-  )
+  // Our own errors (not $fetch errors) already carry a readable message.
+  if (error instanceof Error && error.name !== 'FetchError' && error.message) return error.message
+
+  return getApiErrorMessage(error, 'Something went wrong.')
 }
 
 // ===== 28. Reset and close the form =====

@@ -96,7 +96,8 @@ const stockLabel = computed(() =>
 const buttonLabel = computed(() => {
   if (isOutOfStock.value) return 'Out of Stock'
   if (isMaxedOut.value) return xs.value ? 'Max in Cart' : 'Max Stock in Cart'
-  if (inCart.value) return xs.value ? `Add More (${inCart.value})` : `Add More (${inCart.value} in cart)`
+  // Short form everywhere: the longer "(N in cart)" was cut off on tablet-width cards.
+  if (inCart.value) return `Add More (${inCart.value})`
   return 'Add to Cart'
 })
 

@@ -268,6 +268,7 @@ const customer = reactive({
 const fullNameRules = [
   (value: string) => !!value?.trim() || 'Full name is required',
   (value: string) => value.trim().length >= 2 || 'Full name is too short',
+  (value: string) => value.trim().length <= 100 || 'Use 100 characters or less',
 ]
 const contactRules = [
   (value: string) => !!value?.trim() || 'Contact number is required',
@@ -277,6 +278,7 @@ const contactRules = [
 const addressRules = [
   (value: string) => !!value?.trim() || 'Delivery address is required',
   (value: string) => value.trim().length >= 10 || 'Please enter a complete address',
+  (value: string) => value.trim().length <= 300 || 'Use 300 characters or less',
 ]
 const paymentRules = [(value: string) => !!value || 'Please choose a payment method']
 
@@ -309,9 +311,13 @@ async function placeOrder() {
   clearCheckoutError()
 
   // 1. Validate the form fields
-  const { valid } = await checkoutForm.value.validate()
+  const { valid, errors } = await checkoutForm.value.validate()
   if (!valid) {
     notify.error('Please complete the required fields.')
+    // On phones / tablets the form is above the summary, so bring the first problem into view.
+    const field = errors?.[0]?.id ? document.getElementById(String(errors[0].id)) : null
+    field?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    field?.focus({ preventScroll: true })
     return
   }
 
