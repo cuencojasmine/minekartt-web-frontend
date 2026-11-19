@@ -147,7 +147,7 @@
               </span>
             </span>
 
-            <span class="category-art">
+            <span class="category-art" :class="{ 'category-art-photo': categoryImages[category.name] }">
               <img
                 v-if="categoryImages[category.name]"
                 :src="categoryImages[category.name]"
@@ -304,7 +304,7 @@
               <h3 class="promo-title">{{ promo.title }}</h3>
               <p class="promo-text">{{ promo.text }}</p>
               <v-btn
-                :color="promo.button"
+                :color="promoButtonColor(promo)"
                 variant="flat"
                 append-icon="arrow-right"
                 @click="selectCategory(promo.category)"
@@ -458,6 +458,12 @@ const promos = [
     icon: 'laptop',
   },
 ]
+
+// The meadow promo's deep teal button would vanish on its dark-mode teal surface,
+// so it switches to Spring Meadow there.
+function promoButtonColor(promo: (typeof promos)[number]) {
+  return promo.theme === 'meadow' && theme.global.current.value.dark ? 'meadow' : promo.button
+}
 
 // Search (name, description, category) + category filter + sort.
 const filteredProducts = computed(() => {
@@ -949,15 +955,17 @@ html[data-theme='dark'] .hero-scroll {
 }
 
 /* ---------- Why MineKartt (bento) ---------- */
+/* Desktop: the intro runs full width on top, the four feature tiles share the next row and
+   the stats bar runs full width below (narrower screens: 2 columns, see Responsive). */
 .why-bento {
   display: grid;
-  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
-  grid-auto-rows: minmax(180px, auto);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: auto;
   gap: 16px;
 }
 
 .why-intro {
-  grid-row: span 2;
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -991,6 +999,37 @@ html[data-theme='dark'] .hero-scroll {
 
 .why-intro .v-btn {
   margin-top: auto !important;
+}
+
+/* Wide screens: the full-width intro puts its copy on the left and the button on the right,
+   so the heading stays on one line instead of a tall, narrow column */
+@media (min-width: 1145px) {
+  .why-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 32px;
+    align-items: center;
+    padding: 32px 40px;
+  }
+
+  .why-intro > :not(.v-btn) {
+    grid-column: 1;
+  }
+
+  .why-text {
+    max-width: 560px;
+    margin-bottom: 0;
+  }
+
+  .why-intro .v-btn {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin-top: 0 !important;
+  }
+
+  .why-tile {
+    min-height: 180px; /* the row height the bento had before it switched to auto rows */
+  }
 }
 
 .why-tile {
@@ -1051,12 +1090,13 @@ html[data-theme='dark'] .why-icon-meadow {
 
 /* Stats tile: meadow swatch with deep teal text */
 .why-stats {
-  grid-column: span 2;
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 12px;
   padding: 24px 28px;
+  text-align: center; /* each stat sits in the middle of its third of the full-width bar */
   color: var(--sk-brand-900);
   border-radius: var(--sk-radius-lg);
   background:
@@ -1174,6 +1214,13 @@ html[data-theme='dark'] .why-icon-meadow {
   min-width: 0;
 }
 
+/* The text column stops where the photo box (46% wide, 12px in from the right) begins, minus a
+   6px gap, so a long name like "Home & Living" wraps instead of running under the photo.
+   54% of the content box - 18px = the room left of the photo. The big tile has its own layout. */
+.category-tile:not(.category-tile-0) .category-text {
+  max-width: calc(54% - 18px);
+}
+
 .category-icon {
   margin-bottom: auto;
   box-shadow: inset 0 2px 4px var(--sk-clay-highlight);
@@ -1208,6 +1255,27 @@ html[data-theme='dark'] .why-icon-meadow {
   height: 74%;
 }
 
+/* Big Electronics tile (2x2, 840px and up): the photo box sits in the tile's flow next to
+   the text instead of being absolutely placed, so it takes only the room the title leaves
+   and can never touch or overlap "Electronics". Same 12px inset from the corner as before. */
+@media (min-width: 840px) {
+  .category-tile-0 .category-text {
+    flex-shrink: 0;
+    margin-right: 12px; /* + the tile's 8px gap: at least 20px between title and photo */
+  }
+
+  .category-tile-0 .category-art {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    flex: 0 1 62%;
+    align-self: flex-end;
+    width: auto;
+    min-width: 0;
+    margin: 0 -6px -6px auto;
+  }
+}
+
 .category-tile-0 .category-name {
   font-family: var(--sk-font-display);
   font-size: clamp(1.4rem, 2.4vw, 1.9rem);
@@ -1223,11 +1291,19 @@ html[data-theme='dark'] .why-icon-meadow {
   transition: transform var(--sk-dur-slow) var(--sk-ease);
 }
 
-html[data-theme='dark'] .category-img {
-  mix-blend-mode: normal;
+/* Dark mode: the photo sits on the same dark teal stage as the product cards (--sk-img-tile).
+   Multiply would blacken it there, so it is drawn as is; transparent PNGs blend in, while a
+   photo with a solid white background (a JPG) shows as a white box until it is replaced with
+   a transparent PNG. overflow keeps the hover zoom inside the frame. */
+html[data-theme='dark'] .category-art-photo {
+  overflow: hidden;
+  padding: 6px;
   border-radius: 16px;
   background: var(--sk-img-tile);
-  padding: 6px;
+}
+
+html[data-theme='dark'] .category-img {
+  mix-blend-mode: normal;
 }
 
 .category-tile:hover .category-img {
@@ -1454,8 +1530,14 @@ html[data-theme='dark'] .tab-active:hover {
   border-radius: 16px;
 }
 
+/* No white tile: the photo (a transparent PNG) sits straight on the glass frame. Drawn as is,
+   since multiply on the teal card would tint white products (the volleyball) teal. */
 .promo-teal .promo-img {
-  --sk-img-bg: #ffffff;
+  --sk-img-bg: transparent;
+}
+
+.promo-teal .promo-img :deep(img) {
+  mix-blend-mode: normal;
 }
 
 .promo-meadow .promo-img {
@@ -1514,8 +1596,19 @@ html[data-theme='dark'] .promo-teal {
     linear-gradient(150deg, var(--sk-brand-800) 0%, var(--sk-brand-900) 100%);
 }
 
+/* Dark mode: Teal Waters surface (--sk-promo-meadow in main.css) with Spring Meadow as the
+   accent: label, a meadow-tinted edge and a meadow button with deep teal text. */
 html[data-theme='dark'] .promo-meadow {
   color: var(--sk-meadow-100);
+}
+
+html[data-theme='dark'] .promo.promo-meadow {
+  border-color: rgba(var(--sk-meadow-500-rgb), 0.28);
+}
+
+html[data-theme='dark'] .promo-meadow .promo-eyebrow {
+  color: var(--sk-meadow-500);
+  opacity: 1;
 }
 
 /* Dark mode: give the dark cards an edge against the page */
@@ -1776,6 +1869,11 @@ html[data-theme='dark'] .why-intro {
     bottom: 8px;
   }
 
+  /* Phones: the photo is 50% wide and 8px in, so the text gets 50% - 14px, minus a 6px gap */
+  .category-tile:not(.category-tile-0) .category-text {
+    max-width: calc(50% - 20px);
+  }
+
   .tabs-wrap {
     justify-content: flex-start;
     margin: 0 -16px 16px;
@@ -1818,6 +1916,27 @@ html[data-theme='dark'] .why-intro {
 
   .newsletter-eyes {
     right: 24px;
+  }
+}
+
+/* Phones: the category chips get a near-solid, theme-aware fill (white / deep teal) so
+   they stay readable over the busy photo */
+@media (max-width: 600px) {
+  .hero-popular-chip {
+    background: var(--sk-glass-strong);
+    box-shadow: 0 0 0 1px var(--sk-glass-edge), var(--sk-shadow-sm);
+  }
+}
+
+/* Narrow phones (under 400px): a slightly narrower photo box, so single words such as
+   "Fashion" still fit beside it. Text: 58% of the content box - 12px = the room left of it. */
+@media (max-width: 399px) {
+  .category-tile:not(.category-tile-0) .category-art {
+    width: 42%;
+  }
+
+  .category-tile:not(.category-tile-0) .category-text {
+    max-width: calc(58% - 12px);
   }
 }
 </style>
