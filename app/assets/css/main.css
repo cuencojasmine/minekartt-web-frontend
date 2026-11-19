@@ -60,7 +60,7 @@
   --sk-hover: rgba(16, 42, 51, 0.06);
   --sk-selected: var(--sk-brand-200); /* active chip / tile fill */
   --sk-accent-ink: var(--sk-brand-900); /* text on --sk-tile and --sk-selected */
-  --sk-img-tile: var(--sk-brand-50); /* product photo stage (stays light in dark mode) */
+  --sk-img-tile: var(--sk-brand-50); /* product photo stage (dark teal in dark mode) */
   /* Admin controls (Manage Products): an outlined button on a solid surface, so it steps
      back from the filled CTAs used by shoppers (Shop Now, Add to Cart, Search). */
   --sk-admin-ink: var(--sk-brand-700);
@@ -127,8 +127,9 @@ html[data-theme='dark'] {
   --sk-hover: rgba(255, 255, 255, 0.08);
   --sk-selected: rgba(var(--sk-brand-500-rgb), 0.32);
   --sk-accent-ink: var(--sk-brand-200);
-  /* Dimmed Glacial Sky: less glare on teal, still light enough for dark product silhouettes */
-  --sk-img-tile: #cfe6ec;
+  /* Dark teal photo stage, a step lighter than the cards so black products (lamp, monitor
+     stand) still stand out from it */
+  --sk-img-tile: #244b56;
   --sk-admin-ink: var(--sk-brand-300);
   --sk-admin-bg: #1a3a45;
   --sk-admin-border: #24444f;
@@ -346,13 +347,18 @@ section[id],
 
 /* Product photos: blends white JPG backgrounds into the light tile.
    The tile color sits on the v-img itself because it is its own stacking context.
-   In dark mode the tile stays light (--sk-img-tile), since multiply on navy would blacken photos. */
+   In dark mode the tile is dark teal and the photo is drawn as is, since multiply on a dark
+   tile would blacken it. */
 .sk-product-img {
   background: var(--sk-img-bg, var(--sk-img-tile));
 }
 
 .sk-product-img img {
   mix-blend-mode: multiply;
+}
+
+html[data-theme='dark'] .sk-product-img img {
+  mix-blend-mode: normal;
 }
 
 /* Small product thumbnail (cart, wishlist, admin table) */

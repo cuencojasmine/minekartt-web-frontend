@@ -130,8 +130,8 @@ const year = new Date().getFullYear()
 
 const navLinks = [
   { title: 'Home', to: '/', icon: 'house' },
-  { title: 'Shop', to: { path: '/', hash: '#products' }, icon: 'store' },
   { title: 'Categories', to: { path: '/', hash: '#categories' }, icon: 'shapes' },
+  { title: 'Shop', to: { path: '/', hash: '#products' }, icon: 'store' },
   { title: 'Deals', to: { path: '/', hash: '#deals' }, icon: 'tag' },
 ]
 

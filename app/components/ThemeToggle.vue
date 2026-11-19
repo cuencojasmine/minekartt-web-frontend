@@ -11,7 +11,6 @@
   >
     <!-- :key restarts the spin-in animation each time the icon swaps -->
     <v-icon :key="isDark ? 'sun' : 'moon'" :icon="isDark ? 'sun' : 'moon'" size="22" class="theme-icon" />
-    <v-tooltip activator="parent" location="bottom">{{ isDark ? 'Light theme' : 'Dark theme' }}</v-tooltip>
   </v-btn>
 </template>
 
